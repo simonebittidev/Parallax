@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parallax – Esplora nuovi punti di vista</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: '#7c3aed',
+                light: '#a78bfa',
+                dark: '#6d28d9'
+              }
+            },
+            fontFamily: {
+              display: ['Inter', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-white text-neutral-900 font-display">
+    <section class="relative min-h-screen flex flex-col items-center justify-center text-center px-6 py-20 overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-white pointer-events-none"></div>
+      <div class="relative z-10 max-w-3xl">
+        <h1 class="text-5xl font-extrabold tracking-tight text-primary mb-4">Parallax</h1>
+        <p class="text-xl text-neutral-700 max-w-2xl mb-8">
+          Un'app per la riflessione e il dialogo. Inserisci un pensiero, un'opinione o un testo, e Parallax lo riscrive da tre punti di vista:
+          <strong>opposto</strong>, <strong>neutrale</strong> ed <strong>empatico</strong>.
+        </p>
+        <a href="/tryout" class="inline-flex items-center px-6 py-3 bg-primary text-white text-lg font-semibold rounded-full shadow-lg hover:bg-primary-dark transition">
+          Prova l'app
+          <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </a>
+      </div>
+    </section>
+
+    <section class="bg-gray-50 py-20 px-6">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-3xl font-semibold mb-6">Perché Parallax?</h2>
+        <p class="text-neutral-600 text-lg mb-12">
+          In un mondo pieno di opinioni urlate, Parallax ti aiuta a <strong>comprendere prima di discutere</strong>. Allena la tua mente ad abbracciare la complessità.
+        </p>
+        <div class="grid gap-8 md:grid-cols-3 text-left">
+          <div class="p-6 bg-white rounded-xl shadow hover:shadow-md transition">
+            <h3 class="text-xl font-semibold text-primary mb-2">🌐 Esplora la diversità</h3>
+            <p class="text-neutral-600">Vedi il tuo pensiero da un'ottica opposta e scopri quanto può arricchirti.</p>
+          </div>
+          <div class="p-6 bg-white rounded-xl shadow hover:shadow-md transition">
+            <h3 class="text-xl font-semibold text-primary mb-2">💬 Chat dedicata</h3>
+            <p class="text-neutral-600">Parla con un'AI che adotta il punto di vista che hai scelto. Scopri di più, in profondità.</p>
+          </div>
+          <div class="p-6 bg-white rounded-xl shadow hover:shadow-md transition">
+            <h3 class="text-xl font-semibold text-primary mb-2">🧠 Crescita personale</h3>
+            <p class="text-neutral-600">Allena la tua empatia, affina il pensiero critico e arricchisci la tua prospettiva.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white py-16 px-6">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-2xl font-semibold mb-6">Una nuova prospettiva può cambiare tutto.</h2>
+        <p class="text-neutral-600 text-md mb-8">Inizia oggi a vedere il mondo con occhi nuovi.</p>
+        <a href="/tryout" class="inline-block px-6 py-3 bg-gray-100 text-primary font-semibold rounded-full hover:bg-gray-200 transition">
+          Prova Parallax
+        </a>
+      </div>
+    </section>
+
+    <section class="bg-gray-50 py-20 px-6">
+      <div class="max-w-5xl mx-auto text-center">
+        <h2 class="text-3xl font-semibold mb-6">Guarda Parallax in azione</h2>
+        <p class="text-neutral-600 text-lg mb-10">Un'esperienza fluida e intuitiva per esplorare nuovi punti di vista in pochi clic.</p>
+        <img src="screenshot-app.png" alt="Screenshot dell'app Parallax" class="w-full max-w-4xl mx-auto rounded-2xl shadow-lg border">
+      </div>
+    </section>
+
+    <footer class="text-center text-sm text-neutral-500 py-8 border-t">
+      © 2024 Parallax – Costruito con ♥ per chi ama pensare
+    </footer>
+  </body>
+</html>
