@@ -2,6 +2,8 @@
 
 **Parallax** is an application designed for reflection and dialogue. Users can submit a thought, opinion, or short text, and Parallax will rewrite it from three distinct perspectives: **opposing**, **neutral**, and **empathetic**.
 
+![image](https://github.com/user-attachments/assets/5f481128-70c9-4c56-a0e3-854033a92162)
+
 This helps users:
 - Explore nuance and opposing viewpoints
 - Gain clarity on complex ideas
