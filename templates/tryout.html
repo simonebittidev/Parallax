@@ -63,9 +63,7 @@
 
 <section id="chatSection" class="max-w-3xl mx-auto px-4 hidden">
   <div class="flex flex-col h-[70vh] border rounded-xl bg-white shadow-sm">
-    <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-      <div class="text-sm text-neutral-700">[Mock] Ciao! Sono qui per discutere secondo questo punto di vista. Cosa vuoi chiedermi?</div>
-    </div>
+    <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
     <div class="p-4 border-t bg-white">
       <div class="relative">
         <input type="text" id="chatInput" placeholder="Scrivi un messaggio..." class="w-full pr-12 pl-4 py-3 rounded-full border border-neutral-300 focus:ring-primary focus:outline-none">
@@ -81,9 +79,7 @@
     </div>
   </div>
 </section>
-
-    <!-- Script JS separato per evitare errori -->
-    <script>
+<script>
   window.addEventListener('DOMContentLoaded', () => {
     const activeAgents = new Set();
     let selectedPerspective = null;
@@ -116,15 +112,8 @@
         alert('Per favore, inserisci un testo e seleziona una prospettiva.');
         return;
       }
-      
-      const res = await fetch('api/rewriter', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text, selectedPerspective})
-          });
 
-      const data = await res.json();
-        
+      const data = {"pov":"bla bla bla bla bla bla bla bla"};
       rewrittenText.textContent = data.pov;
       responseBox.classList.remove('hidden');
     });
@@ -134,25 +123,30 @@
       document.getElementById('mainSection').classList.add('hidden');
       document.getElementById('chatSection').classList.remove('hidden');
 
+      const chatBox = document.getElementById('chatBox');
       chatBox.innerHTML = '';
 
-      const selectedButton = document.querySelector('.toggle-btn.bg-white, .toggle-btn.bg-primary');
-      const selectedPerspective = selectedButton ? selectedButton.textContent : 'AI';
+      const userWrapper = document.createElement('div');
+      userWrapper.className = 'flex justify-end';
 
       const userMsg = document.createElement('div');
-      userMsg.className = 'text-sm text-right bg-primary/10 text-primary border border-primary/20 rounded-lg px-3 py-2 inline-block max-w-[80%]';
-      userMsg.textContent = userInput.value;
-      chatBox.appendChild(userMsg);
+      userMsg.className = 'text-sm text-black rounded-lg px-3 py-2 inline-block max-w-[80%]'
+      userMsg.textContent = document.getElementById('userInput').value;
 
-      const aiLabel = document.createElement('div');
-      aiLabel.className = 'text-xs font-semibold uppercase mb-1';
-      aiLabel.textContent = `${selectedPerspective} dice:`;
-      chatBox.appendChild(aiLabel);
+      userWrapper.appendChild(userMsg);
+      chatBox.appendChild(userWrapper);
+
+      
 
       const aiMsg = document.createElement('div');
-      aiMsg.className = 'text-sm bg-blue-100 text-blue-800 border border-white rounded-lg px-3 py-2 whitespace-pre-line';
-      aiMsg.textContent = rewrittenText.textContent;
+      let styleClass = '';
+      if (selectedPerspective === 'Opposto') styleClass = 'bg-red-100';
+      if (selectedPerspective === 'Neutrale') styleClass = 'bg-blue-100';
+      if (selectedPerspective === 'Empatico') styleClass = 'bg-green-100';
+      aiMsg.className = 'text-sm ' + styleClass + ' text-black border border-white rounded-full px-4 py-2 whitespace-pre-line inline-block max-w-[80%]';
+      aiMsg.textContent = document.getElementById('rewrittenText').textContent;
       chatBox.appendChild(aiMsg);
+      activeAgents.add(selectedPerspective);
 
       chatBox.scrollTop = chatBox.scrollHeight;
     });
@@ -176,66 +170,48 @@
       const message = input.value.trim();
 
       if (message !== '') {
-        const userLabel = document.createElement('div');
-        userLabel.className = 'text-xs text-right font-semibold text-primary mb-1';
-        userLabel.textContent = 'Tu:';
-        chatBox.appendChild(userLabel);
+        
+
+        const userWrapper = document.createElement('div');
+        userWrapper.className = 'flex justify-end';
 
         const userMsg = document.createElement('div');
-        userMsg.className = 'text-sm text-right bg-primary/10 text-primary border border-primary/20 rounded-lg px-3 py-2 inline-block max-w-[80%]';
+        userMsg.className = 'text-sm text-black rounded-lg px-3 py-2 inline-block max-w-[80%]'
         userMsg.textContent = message;
-        chatBox.appendChild(userMsg);
+
+        userWrapper.appendChild(userMsg);
+        chatBox.appendChild(userWrapper);
 
         Array.from(activeAgents).forEach(agent => {
-        const aiMsg = document.createElement('div');
-        let styleClass = '';
-        if (agent === 'Opposto') styleClass = 'bg-red-100 text-red-800';
-        if (agent === 'Neutrale') styleClass = 'bg-blue-100 text-blue-800';
-        if (agent === 'Empatico') styleClass = 'bg-green-100 text-green-800';
-        aiMsg.className = `text-sm ${styleClass} border border-white rounded-lg px-3 py-2 whitespace-pre-line`;
+          const aiMsg = document.createElement('div');
+          let styleClass = '';
+          if (agent === 'Opposto') styleClass = 'bg-red-100 text-red-800';
+          if (agent === 'Neutrale') styleClass = 'bg-blue-100 text-blue-800';
+          if (agent === 'Empatico') styleClass = 'bg-green-100 text-green-800';
+          aiMsg.className = 'text-sm ' + styleClass + ' border border-white rounded-full px-4 py-2 whitespace-pre-line inline-block max-w-[80%]';
 
-        const label = document.createElement('div');
-        label.className = 'text-xs font-semibold uppercase mb-1';
-        label.textContent = `${agent} dice:`;
-        chatBox.appendChild(label);
-        chatBox.appendChild(aiMsg);
+          
+          chatBox.appendChild(aiMsg);
 
-        const textNode = document.createTextNode('');
-        aiMsg.appendChild(textNode);
+          const textNode = document.createTextNode('');
+          aiMsg.appendChild(textNode);
 
-        const cursor = document.createElement('span');
-        cursor.className = 'animate-pulse';
-        cursor.textContent = '|';
-        aiMsg.appendChild(cursor);
-
-        let i = 0;
-        const reply = `[Mock] ${agent}: ${perspectiveReplies[agent]} → ${message}`;
-        const typing = setInterval(() => {
-          textNode.textContent = reply.slice(0, i++);
-          chatBox.scrollTop = chatBox.scrollHeight;
-          if (i > reply.length) {
-            clearInterval(typing);
-            cursor.remove();
-          }
-        }, 30);
-      });
-
-        let i = 0;
-        const reply = `[Mock] ${Array.from(activeAgents).map(p => `${p}: ${perspectiveReplies[p]}`).join(' | ')} → ${message}`;
-        const typing = setInterval(() => {
-          textNode.textContent = reply.slice(0, i++);
-          chatBox.scrollTop = chatBox.scrollHeight;
-          if (i > reply.length) {
-            clearInterval(typing);
-            cursor.remove();
-          }
-        }, 30);
+          let i = 0;
+          const reply = `[Mock] ${agent}: ${perspectiveReplies[agent]} → ${message}`;
+          const typing = () => {
+            if (i < reply.length) {
+              textNode.textContent += reply[i++];
+              chatBox.scrollTop = chatBox.scrollHeight;
+              setTimeout(typing, 30);
+            }
+          };
+          typing();
+        });
 
         chatBox.scrollTop = chatBox.scrollHeight;
         input.value = '';
       }
     });
-
   });
 </script>
   </body>

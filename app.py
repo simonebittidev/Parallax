@@ -53,8 +53,8 @@ def rewriter():
     user_text = data.get('text', '')
     selected_perspective = data.get('selectedPerspective', '')
 
-    res  = create_pov_from_text(user_text, selected_perspective)
-    
+    # res  = create_pov_from_text(user_text, selected_perspective)
+    res = "bla bla bla bla bla bla bla bla"
     print(res)
     return jsonify({"pov": res})
 
