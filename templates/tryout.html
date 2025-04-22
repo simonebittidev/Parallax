@@ -130,14 +130,31 @@
     });
 
     document.getElementById('chatBtn').addEventListener('click', () => {
-      activeAgents.clear();
-      activeAgents.add(selectedPerspective);
-      const all = ['Opposto', 'Neutrale', 'Empatico'];
-      const remaining = all.filter(p => p !== selectedPerspective);
-
       document.getElementById('headerDescription').classList.add('hidden');
       document.getElementById('mainSection').classList.add('hidden');
       document.getElementById('chatSection').classList.remove('hidden');
+
+      chatBox.innerHTML = '';
+
+      const selectedButton = document.querySelector('.toggle-btn.bg-white, .toggle-btn.bg-primary');
+      const selectedPerspective = selectedButton ? selectedButton.textContent : 'AI';
+
+      const userMsg = document.createElement('div');
+      userMsg.className = 'text-sm text-right bg-primary/10 text-primary border border-primary/20 rounded-lg px-3 py-2 inline-block max-w-[80%]';
+      userMsg.textContent = userInput.value;
+      chatBox.appendChild(userMsg);
+
+      const aiLabel = document.createElement('div');
+      aiLabel.className = 'text-xs font-semibold uppercase mb-1';
+      aiLabel.textContent = `${selectedPerspective} dice:`;
+      chatBox.appendChild(aiLabel);
+
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'text-sm bg-blue-100 text-blue-800 border border-white rounded-lg px-3 py-2 whitespace-pre-line';
+      aiMsg.textContent = rewrittenText.textContent;
+      chatBox.appendChild(aiMsg);
+
+      chatBox.scrollTop = chatBox.scrollHeight;
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
