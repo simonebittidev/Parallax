@@ -5,3 +5,6 @@ langchain-experimental
 langgraph
 pillow
 flask
+flask-cors
+python-dotenv
+tqdm

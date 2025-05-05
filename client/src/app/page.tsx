@@ -38,14 +38,35 @@ export default function Home() {
     router.push(`/chat?${params.toString()}`);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!inputText || !selectedPerspective) {
       alert('Per favore, inserisci un testo e seleziona una prospettiva.');
       return;
     }
-    const mockData = { pov: "bla bla bla bla bla bla bla bla" };
-    setRewrittenText(mockData.pov);
-    setShowResponse(true);
+  
+    try {
+      const response = await fetch('/api/processpov', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          perspective: selectedPerspective,
+          userText: inputText,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Errore nella risposta del server');
+      }
+  
+      const data = await response.json();
+      setRewrittenText(data.pov); 
+      setShowResponse(true);
+    } catch (error) {
+      console.error('Errore durante la chiamata al server:', error);
+      alert('Si è verificato un errore durante la comunicazione con il server.');
+    }
   };
 
   const handleReset = () => {

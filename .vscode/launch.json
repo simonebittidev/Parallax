@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+        "name": "Flask App",
+        "type": "python",
+        "request": "launch",
+        "module": "flask",
+        "env": {
+            "FLASK_APP": "app.py",           // cambia se il tuo file principale ha un altro nome
+            "FLASK_ENV": "development"
+        },
+        "args": [
+            "run",
+            "--no-debugger",                // VSCode gestisce il debugger
+            "--no-reload"                   // Disattiva il reload automatico per evitare doppie istanze
+        ],
+        "jinja": true
+        }
+    ]
+}
+  
