@@ -96,16 +96,16 @@ class AgentManager:
 
                 response = chain.invoke(state)
 
-                # # Se il modello risponde con nulla o qualcosa di troppo breve, ignora
-                # if not response.content or response.content.strip().lower() in ["", "no comment", "niente da aggiungere"]:
+                # Se il modello risponde con nulla o qualcosa di troppo breve, ignora
+                # if not response or not response.message:
                 #     return {}  # Nessuna risposta
-
-               
 
                 new_message = {
                         "role": "ai",
                         "content": f"{name}: {response.message}"
                 }
+
+                print(new_message)
 
                 return {"messages": [new_message]}
             return node
@@ -137,14 +137,31 @@ class AgentManager:
 
         return builder
 
-    def trigger_agents(self):
-        input_state = {"messages": list(self.chat_history)}  # Copy current history
-        result = self.runner.invoke(input_state)
-        new_messages = result["messages"][len(self.chat_history):]
+    # def trigger_agents(self):
+    #     input_state = {"messages": list(self.chat_history)}  # Copy current history
+    #     result = self.runner.invoke(input_state)
+    #     new_messages = result["messages"][len(self.chat_history):]
 
-        for message in new_messages:
-            msg = {"role": "assistant", "content": message.content}
-            self.chat_history.append(msg)
+    #     for message in new_messages:
+    #         msg = {"role": "ai", "content": message.content}
+    #         self.chat_history.append(msg)
+
+    def trigger_agents(self, max_rounds: int = 3):
+        for _ in range(max_rounds):
+        # while new_messages_found:
+            input_state = {"messages": list(self.chat_history)}
+            result = self.runner.invoke(input_state)
+            new_messages = result["messages"][len(self.chat_history):]
+
+            if new_messages:
+                for message in new_messages:
+                    msg = {"role": "ai", "content": message.content}
+                    self.chat_history.append(msg)
+            # else:
+            #     new_messages_found = False
+
+
+
 
     # def run_spontaneous_agents(self):
     #     while True:

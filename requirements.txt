@@ -4,7 +4,8 @@ langchain-community
 langchain-experimental
 langgraph
 pillow
-flask
-flask-cors
 python-dotenv
 tqdm
+fastapi
+uvicorn[standard]
+python-dotenv
