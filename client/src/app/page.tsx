@@ -10,21 +10,22 @@ export default function Home() {
 
   // Tipi TypeScript
   interface ChatMessage {
-    from: 'user' | 'Opposto' | 'Neutrale' | 'Empatico';
+    from: 'user' | 'Opposite' | 'Neutral' | 'Emphatic';
     text: string;
   }
 
-  const [selectedPerspective, setSelectedPerspective] = useState<'Opposto' | 'Neutrale' | 'Empatico' | null>(null);
+  const [selectedPerspective, setSelectedPerspective] = useState<'Opposite' | 'Neutral' | 'Emphatic' | null>(null);
   const [inputText, setInputText] = useState<string>('');
   const [rewrittenText, setRewrittenText] = useState<string>('');
+  const [conv_id, setConvId] = useState<string>('');
   const [showResponse, setShowResponse] = useState<boolean>(false);
   const [inChat, setInChat] = useState<boolean>(false);
   const [chatInput, setChatInput] = useState<string>('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const activeAgents = useRef<Set<'Opposto' | 'Neutrale' | 'Empatico'>>(new Set());
+  const activeAgents = useRef<Set<'Opposite' | 'Neutral' | 'Emphatic'>>(new Set());
   const chatBoxRef = useRef<HTMLDivElement>(null);
 
-  const handlePerspectiveClick = (perspective: 'Opposto' | 'Neutrale' | 'Empatico') => {
+  const handlePerspectiveClick = (perspective: 'Opposite' | 'Neutral' | 'Emphatic') => {
     setSelectedPerspective(perspective);
   };
 
@@ -34,6 +35,7 @@ export default function Home() {
       perspective: selectedPerspective,
       userText: inputText,
       rewritten: rewrittenText,
+      conv_id:conv_id
     });
     router.push(`/chat?${params.toString()}`);
   };
@@ -62,6 +64,8 @@ export default function Home() {
   
       const data = await response.json();
       setRewrittenText(data.pov); 
+      setConvId(data.conv_id); 
+
       setShowResponse(true);
     } catch (error) {
       console.error('Errore durante la chiamata al server:', error);
@@ -75,6 +79,7 @@ export default function Home() {
     setShowResponse(false);
     setInputText('');
     setRewrittenText('');
+    setConvId('');
     setSelectedPerspective(null);
     setChatMessages([]);
   };
@@ -88,8 +93,8 @@ export default function Home() {
 
     activeAgents.current.forEach(agent => {
       const reply = `[Mock] ${agent}: Risposta ${
-        agent === 'Opposto' ? 'contraria e provocatoria' :
-        agent === 'Neutrale' ? 'oggettiva e bilanciata' :
+        agent === 'Opposite' ? 'contraria e provocatoria' :
+        agent === 'Neutral' ? 'oggettiva e bilanciata' :
         'comprensiva e solidale'} → ${chatInput.trim()}`;
       newMessages.push({ from: agent, text: reply });
     });
@@ -104,10 +109,10 @@ export default function Home() {
     }
   }, [chatMessages]);
 
-  const perspectiveStyles: Record<'Opposto' | 'Neutrale' | 'Empatico', string> = {
-    Opposto: 'bg-red-100 text-red-800',
-    Neutrale: 'bg-blue-100 text-blue-800',
-    Empatico: 'bg-green-100 text-green-800'
+  const perspectiveStyles: Record<'Opposite' | 'Neutral' | 'Emphatic', string> = {
+    Opposite: 'bg-red-100 text-red-800',
+    Neutral: 'bg-blue-100 text-blue-800',
+    Emphatic: 'bg-green-100 text-green-800'
   };
 
   return (
@@ -130,7 +135,7 @@ export default function Home() {
         <section id="mainSection">
           <div className="flex justify-center mt-4">
             <div className="inline-flex bg-gray-100 rounded-full p-1 gap-1 backdrop-blur-sm">
-              {(['Opposto', 'Neutrale', 'Empatico'] as const).map(p => (
+              {(['Opposite', 'Neutral', 'Emphatic'] as const).map(p => (
                 <button
                   key={p}
                   onClick={() => handlePerspectiveClick(p)}
@@ -139,8 +144,8 @@ export default function Home() {
                     selectedPerspective === p && 'bg-indigo-600 text-white'
                   )}
                   style={selectedPerspective === p ? {
-                    boxShadow: p === 'Opposto' ? '0 0 10px 3px rgba(239, 68, 68, 0.4)' :
-                               p === 'Neutrale' ? '0 0 10px 3px rgba(59, 130, 246, 0.4)' :
+                    boxShadow: p === 'Opposite' ? '0 0 10px 3px rgba(239, 68, 68, 0.4)' :
+                               p === 'Neutral' ? '0 0 10px 3px rgba(59, 130, 246, 0.4)' :
                                                   '0 0 10px 3px rgba(34, 197, 94, 0.4)'
                   } : {}}
                 >

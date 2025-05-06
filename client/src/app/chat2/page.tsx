@@ -13,7 +13,7 @@ export default function Home() {
 
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const socket = new WebSocket(`${protocol}://${window.location.host}/ws`);
+    const socket = new WebSocket(`${protocol}://${window.location.host}/ws/simoneb/123456`);
     socketRef.current = socket;
 
     socket.onopen = () => {

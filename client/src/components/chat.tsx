@@ -5,14 +5,15 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 type ChatMessage = {
-  from: 'user' | 'Opposto' | 'Neutrale' | 'Empatico';
-  text: string;
+  role: 'user' | 'ai';
+  agent_name: 'Opposite' | 'Neutral' | 'Emphatic';
+  content: string;
 };
 
 const ChatContent = () => {
   const params = useSearchParams();
   const chatBoxRef = useRef<HTMLDivElement>(null);
-  const perspective = params.get('perspective') as ChatMessage['from'] | null;
+  const perspective = params.get('perspective') as ChatMessage['agent_name'] | null;
   const [activePerspectives, setActivePerspectives] = useState<string[]>([]);
 
   const userText = params.get('userText');
@@ -20,6 +21,38 @@ const ChatContent = () => {
 
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  
+  const socketRef = useRef<WebSocket | null>(null);
+  
+  //initialize wbsocket
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const socket = new WebSocket(`${protocol}://${window.location.host}/ws/simoneb/123456`);
+    socketRef.current = socket;
+
+    socket.onopen = () => {
+      console.log("✅ WebSocket connesso");
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (Array.isArray(data)) {
+          setChatMessages(data);
+        }
+      } catch (err) {
+        console.error("Errore parsing messaggio:", err);
+      }
+    };
+
+    socket.onclose = () => {
+      console.log("❌ WebSocket disconnesso");
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
 
   useEffect(() => {
     if (perspective) {
@@ -30,8 +63,8 @@ const ChatContent = () => {
   useEffect(() => {
     if (perspective && userText && rewritten) {
       setChatMessages([
-        { from: 'user', text: userText },
-        { from: perspective, text: rewritten },
+        { role: 'user', agent_name: "Opposite", content: userText },
+        { role: 'ai', agent_name: perspective,  content: rewritten },
       ]);
     }
   }, [perspective, userText, rewritten]);
@@ -47,10 +80,11 @@ const ChatContent = () => {
 
     const newMessages: ChatMessage[] = [
       ...chatMessages,
-      { from: 'user', text: chatInput.trim() },
+      { role: 'user', agent_name: "Opposite", content: chatInput.trim() },
       {
-        from: perspective,
-        text: `${chatInput.trim()}`
+        role: 'ai',
+        agent_name: perspective,
+        content: `${chatInput.trim()}`
       }
     ];
 
@@ -59,29 +93,28 @@ const ChatContent = () => {
   };
 
   return (
-    
       <div className="flex flex-col h-screen max-w-3xl mx-auto py-5 pt-15">
         <div className="flex-1 overflow-y-auto p-4" ref={chatBoxRef}>
           {chatMessages.map((msg, i) => (
-            <div key={i} className={`mb-5 flex items-start gap-2 ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {msg.from !== 'user' && (
+            <div key={i} className={`mb-5 flex items-start gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              {msg.role !== 'user' && (
                 <div
                   className={clsx(
                     'w-8 h-8 flex items-center mt-1 justify-center rounded-full text-white font-bold text-sm',
                     {
-                      'bg-red-500': msg.from === 'Opposto',
-                      'bg-blue-500': msg.from === 'Neutrale',
-                      'bg-green-500': msg.from === 'Empatico',
+                      'bg-red-500': msg.agent_name === 'Opposite',
+                      'bg-blue-500': msg.agent_name === 'Neutral',
+                      'bg-green-500': msg.agent_name === 'Emphatic',
                     }
                   )}
                 >
-                  {msg.from[0]}
+                  {msg.agent_name[0]}
                 </div>
               )}
               <div
-                className={`rounded-xl px-5 py-3 text-sm max-w-[80%] whitespace-pre-line ${msg.from === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'}`}
+                className={`rounded-xl px-5 py-3 text-sm max-w-[80%] whitespace-pre-line ${msg.role === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'}`}
               >
-                {msg.text}
+                {msg.content}
               </div>
             </div>
           ))}
@@ -109,15 +142,16 @@ const ChatContent = () => {
             </button>
           </div>
           <div>
-            {['Opposto', 'Neutrale', 'Empatico'].filter(p => p !== perspective && !activePerspectives.includes(p)).map(p => (
+            {['Opposite', 'Neutral', 'Emphatic'].filter(p => p !== perspective && !activePerspectives.includes(p)).map(p => (
               <button
                 key={p}
                 onClick={() => {
                   setChatMessages(prev => [
                     ...prev,
                     {
-                      from: p as ChatMessage['from'],
-                      text: `${rewritten}`,
+                      role: 'ai',
+                      agent_name: p as ChatMessage['agent_name'],
+                      content: `${rewritten}`,
                     }
                   ]);
                   setActivePerspectives(prev => [...prev, p]);

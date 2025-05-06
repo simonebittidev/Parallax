@@ -9,3 +9,4 @@ tqdm
 fastapi
 uvicorn[standard]
 python-dotenv
+firebase_admin

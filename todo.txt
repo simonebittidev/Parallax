@@ -1,0 +1,13 @@
+1. inviare lo user_id dalla pagina iniziale
+2. quando si aggiunge un POV dalla chat bisogna chiamare generatepov e inviare conv_id + user_id
+3. fare generare un messaggio iniziale dall'agente giusto, non usare il generatedpov
+4. usare ws per comunicare i messaggi
+
+
+------------
+4. sistemare pagina di informazioni utente
+5. sistemare paddings su smarthphone
+6. sistemare cookie policy e privacy policy
+7. fare in modo che sul pulsante invio vengano inviati i messaggi
+8 aggiungere icone giuste
+
