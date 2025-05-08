@@ -9,12 +9,13 @@ from dotenv import load_dotenv
 from llm_utils.agentv2 import AgentManager
 from llm_utils.llm_pov import create_pov
 from pathlib import Path
-from llm_utils.llm_chat import ChatAgent, OppositeChatAgent, NeutralChatAgent, EmphaticChatAgent
+from llm_utils.llm_chat import ChatAgent, OppositeChatAgent, NeutralChatAgent, EmphaticChatAgent, AgentMessage
 import asyncio
 import firebase_admin
 from firebase_admin import firestore, credentials
 import json
-from utils.chat import load_chat_history, save_message 
+from utils.chat import load_chat_history, save_message, serialize_chat_history_to_json
+from langchain.schema import HumanMessage
 
 load_dotenv()
 
@@ -38,20 +39,15 @@ MAX_AGENT_CHAIN = 5
 client_path = Path("client/out")
 app.mount("/static", StaticFiles(directory=client_path), name="static")
 
-chat_history = []
-agent_manager = AgentManager(chat_history)
 connected_clients = []
-
 active_agents_by_conversation: Dict[str, List[ChatAgent]] = {}
 
-async def broadcast():
+async def broadcast(chat_history):
     for client in connected_clients:
         await client.send_json(chat_history)
 
-async def agent_loop(agent: ChatAgent):
+async def agent_loop(agent: ChatAgent, user_id):
     conversation_id = agent.conv_id
-    # user_id = agent.user_id
-
     last_seen = 0
 
     while True:
@@ -71,6 +67,7 @@ async def agent_loop(agent: ChatAgent):
 
         print(f"Agent {agent.agent_name} is running")
 
+        chat_history = await load_chat_history(db, user_id, conversation_id)
         print(f"Chat history: {chat_history}")
         print(f"Last seen: {last_seen}")
         if len(chat_history) > last_seen:
@@ -95,9 +92,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id
         print(user_id)
         print(conversation_id)
 
-        chat_history = await load_chat_history(user_id, conversation_id)
-        
-        # print(f"agents: {active_agents}")
+        chat_history = await load_chat_history(db, user_id, conversation_id)
 
         await websocket.send_json(chat_history)
         while True:
@@ -114,25 +109,28 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id
     except WebSocketDisconnect:
         connected_clients.remove(websocket)
 
-@app.get("/messages")
-async def get_messages():
-    return JSONResponse(content=chat_history)
+@app.get("/messages/{user_id}/{conversation_id}")
+async def get_messages(user_id: str, conversation_id: str):
+    print(f"Fetching messages for user {user_id} and conversation {conversation_id}")
+    chat_history = await load_chat_history(db, user_id, conversation_id)
+
+    chat_history_json = serialize_chat_history_to_json(chat_history)
+    return JSONResponse(content=chat_history_json)
 
 @app.post("/api/processpov")
 async def process_pov(request: Request):
     data = await request.json()
     perspective = data.get("perspective")
     user_text = data.get("userText")
-    conv_id = data.get("conv_id")
-    user_id = data.get("user_id")
-
+    conv_id = data.get("convId")
+    user_id = data.get("userId")
 
     if not conv_id:
         print("No conversation ID provided, creating a new one.")
         conv_id =str(uuid.uuid4())
 
         #set first msg
-        await save_message(db, user_id=user_id, conversation_id=conv_id, message={"role": "user", "content": user_text})
+        await save_message(db, user_id=user_id, conversation_id=conv_id,message=HumanMessage(content=user_text))
 
     rewritten_text = create_pov(perspective, user_text)
 
@@ -142,20 +140,20 @@ async def process_pov(request: Request):
         agent = OppositeChatAgent(conv_id, rewritten_text)
         print(f"Agent: {agent.conv_id}")
 
-        start_agent(agent)
+        start_agent(agent, user_id)
     elif perspective == "Neutral" or perspective == "Neutrale":
         agent = NeutralChatAgent(conv_id, rewritten_text)
-        start_agent(agent)
+        start_agent(agent, user_id)
     elif perspective == "Emphatic" or perspective == "Empatico":
         agent = EmphaticChatAgent(conv_id, rewritten_text)
-        start_agent(agent)
+        start_agent(agent, user_id)
 
     #set msg
-    await save_message(db, user_id=user_id, conversation_id=conv_id, message={"role": "ai", "content": f"{perspective}:{user_text}"})
+    await save_message(db, user_id=user_id, conversation_id=conv_id, message= AgentMessage(agent_name=perspective, content=rewritten_text))
 
     return {"conv_id": conv_id, "pov": rewritten_text}
 
-def start_agent(agent: ChatAgent):
+def start_agent(agent: ChatAgent, user_id):
     conversation_id = agent.conv_id
 
     if conversation_id not in active_agents_by_conversation:
@@ -166,7 +164,7 @@ def start_agent(agent: ChatAgent):
         return
 
     active_agents_by_conversation[conversation_id].append(agent)
-    asyncio.create_task(agent_loop(agent))
+    asyncio.create_task(agent_loop(agent, user_id))
 
 @app.get("/{full_path:path}")
 async def serve_frontend(full_path: str):
@@ -181,8 +179,3 @@ async def serve_frontend(full_path: str):
     fallback_index = client_path / "index.html"
     return FileResponse(fallback_index)
 
-# Avvia i 3 agenti all'avvio del server
-# @app.on_event("startup")
-# async def startup_event():
-#     for name in active_agents:
-#         asyncio.create_task(agent_loop(name))

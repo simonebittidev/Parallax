@@ -3,6 +3,8 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { onAuthStateChanged, User } from 'firebase/auth'
+import { logOut, auth } from '../lib/firebase'
 
 type ChatMessage = {
   role: 'user' | 'ai';
@@ -14,16 +16,72 @@ const ChatContent = () => {
   const params = useSearchParams();
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const perspective = params.get('perspective') as ChatMessage['agent_name'] | null;
+  const conv_id = params.get('conv_id') as string || null;
   const [activePerspectives, setActivePerspectives] = useState<string[]>([]);
-
-  const userText = params.get('userText');
-  const rewritten = params.get('rewritten');
-
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  
   const socketRef = useRef<WebSocket | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
+      if (user) {
+        setUserId(user.uid); // ✅ Ottieni l'ID utente loggato
+      } else {
+        setUserId(null);
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup
+  }, []);
+
+  const getMessages = async () => {
+    try {
+
+      console.log('conv_id:', conv_id);
+      console.log('userId:', userId); 
+
+      if (!userId || !conv_id) {
+        alert('si è verificato un errore');
+        return;
+      }
+
+      const user_id = userId;
+      const url = `/messages/${user_id}/${conv_id}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
   
+      if (!response.ok) {
+        throw new Error('Errore nella risposta del server');
+      }
+  
+      const messages = JSON.parse(await response.json());
+      console.log('Messaggi ricevuti:', messages);
+
+      if (Array.isArray(messages)) {
+        console.log('messaggi ricevuti in formato array');
+        setChatMessages(messages);
+      }
+
+    } catch (error) {
+      console.error('Errore durante la chiamata al server:', error);
+      alert('Si è verificato un errore durante la comunicazione con il server.');
+    }
+  };
+
+  useEffect(() => {
+    if (userId && conv_id) {
+      getMessages();
+    }
+  }, [userId, conv_id]);
+  
+  // WB
+
   //initialize wbsocket
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
@@ -54,20 +112,20 @@ const ChatContent = () => {
     };
   }, []);
 
+  // const sendMessage = () => {
+  //   if (chatInput.trim() && socketRef.current?.readyState === WebSocket.OPEN) {
+  //     socketRef.current.send(JSON.stringify({ text: chatInput }));
+  //     setChatInput("");
+  //   }
+  // };
+
+  // END WB
+
   useEffect(() => {
     if (perspective) {
       setActivePerspectives([perspective]);
     }
   }, [perspective]);
-
-  useEffect(() => {
-    if (perspective && userText && rewritten) {
-      setChatMessages([
-        { role: 'user', agent_name: "Opposite", content: userText },
-        { role: 'ai', agent_name: perspective,  content: rewritten },
-      ]);
-    }
-  }, [perspective, userText, rewritten]);
 
   useEffect(() => {
     if (chatBoxRef.current) {
@@ -78,18 +136,10 @@ const ChatContent = () => {
   const handleSend = () => {
     if (!chatInput.trim() || !perspective) return;
 
-    const newMessages: ChatMessage[] = [
-      ...chatMessages,
-      { role: 'user', agent_name: "Opposite", content: chatInput.trim() },
-      {
-        role: 'ai',
-        agent_name: perspective,
-        content: `${chatInput.trim()}`
-      }
-    ];
-
-    setChatMessages(newMessages);
-    setChatInput('');
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({ text: chatInput }));
+      setChatInput("");
+    }
   };
 
   return (
@@ -145,17 +195,17 @@ const ChatContent = () => {
             {['Opposite', 'Neutral', 'Emphatic'].filter(p => p !== perspective && !activePerspectives.includes(p)).map(p => (
               <button
                 key={p}
-                onClick={() => {
-                  setChatMessages(prev => [
-                    ...prev,
-                    {
-                      role: 'ai',
-                      agent_name: p as ChatMessage['agent_name'],
-                      content: `${rewritten}`,
-                    }
-                  ]);
-                  setActivePerspectives(prev => [...prev, p]);
-                }}
+                // onClick={() => {
+                //   setChatMessages(prev => [
+                //     ...prev,
+                //     {
+                //       role: 'ai',
+                //       agent_name: p as ChatMessage['agent_name'],
+                //       content: `${rewritten}`,
+                //     }
+                //   ]);
+                //   setActivePerspectives(prev => [...prev, p]);
+                // }}
                 className="mt-2 inline-flex items-center px-6 py-2 bg-gray-100 rounded-xl border border-gray-300 hover:bg-gray-200 transition mr-2"
               >
                 ➕ Aggiungi {p}

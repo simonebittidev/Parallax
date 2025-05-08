@@ -15,10 +15,9 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
 
 class AgentMessage(AIMessage):
-    def __init__(self, agent_name:str):
-        super().__init__()
-        self.initialize_required_param()
-
+    def __init__(self, agent_name:str, content:str):
+        super().__init__(content=content)
+        # self.initialize_required_param()
         self.agent_name = agent_name
 
 class Result(BaseModel):
@@ -99,12 +98,9 @@ class ChatAgent():
 
         print(f"Response: {response}")
 
-        msg = AgentMessage()
-        msg.content = {response.message}
-        msg.agent_name = self.agent_name
-        
         if response: 
-            return AgentMessage #{"role": "ai", "content": f"Agente {self.agent_name}: {response.message}"}
+            msg = AgentMessage(content=response.message, agent_name=self.agent_name)
+            return msg
 
         return None
 

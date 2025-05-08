@@ -4,9 +4,25 @@ import { useState, useEffect, useRef} from 'react'
 import Navbar from '@/components/navbar';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, User } from 'firebase/auth'
+import { logOut, auth } from '../lib/firebase'
 
 export default function Home() {
+  const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
+  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
+      if (user) {
+        setUserId(user.uid); // ✅ Ottieni l'ID utente loggato
+      } else {
+        setUserId(null);
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup
+  }, []);
+
 
   // Tipi TypeScript
   interface ChatMessage {
@@ -32,9 +48,6 @@ export default function Home() {
   const handleChatStart = () => {
     if (!selectedPerspective) return;
     const params = new URLSearchParams({
-      perspective: selectedPerspective,
-      userText: inputText,
-      rewritten: rewrittenText,
       conv_id:conv_id
     });
     router.push(`/chat?${params.toString()}`);
@@ -45,7 +58,7 @@ export default function Home() {
       alert('Per favore, inserisci un testo e seleziona una prospettiva.');
       return;
     }
-  
+
     try {
       const response = await fetch('/api/processpov', {
         method: 'POST',
@@ -55,16 +68,17 @@ export default function Home() {
         body: JSON.stringify({
           perspective: selectedPerspective,
           userText: inputText,
+          userId: userId
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error('Errore nella risposta del server');
       }
-  
+
       const data = await response.json();
-      setRewrittenText(data.pov); 
-      setConvId(data.conv_id); 
+      setRewrittenText(data.pov);
+      setConvId(data.conv_id);
 
       setShowResponse(true);
     } catch (error) {
