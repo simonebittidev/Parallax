@@ -3,6 +3,7 @@ import asyncio
 import json
 from langchain.schema import HumanMessage, BaseMessage
 from llm_utils.llm_chat import  AgentMessage
+from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 
 async def save_message(db, user_id: str, conversation_id: str, message: BaseMessage):
     if isinstance(message, HumanMessage):
@@ -26,6 +27,8 @@ async def save_message(db, user_id: str, conversation_id: str, message: BaseMess
     
     await asyncio.to_thread(lambda: ref.add(message))
 
+    return message
+
 async def load_chat_history(db, user_id: str, conversation_id: str) -> list:
     ref = db.collection("users").document(user_id)\
         .collection("conversations").document(conversation_id)\
@@ -34,12 +37,14 @@ async def load_chat_history(db, user_id: str, conversation_id: str) -> list:
     docs = await asyncio.to_thread(lambda: ref.order_by("timestamp").stream())
     return [doc.to_dict() for doc in docs]
 
-def serialize_to_timestamp(obj):
-    if hasattr(obj, 'timestamp'):
-        return obj.timestamp()
-    raise TypeError(f"Type {type(obj)} not serializable")
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, DatetimeWithNanoseconds):
+            return obj.isoformat()
+        return super().default(obj)
 
 def serialize_chat_history_to_json(chat_history):
-    return json.dumps(chat_history, default=serialize_to_timestamp)
+    return json.dumps(chat_history, cls=CustomJSONEncoder)
 
 

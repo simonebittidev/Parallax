@@ -85,7 +85,7 @@ const ChatContent = () => {
   //initialize wbsocket
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const socket = new WebSocket(`${protocol}://${window.location.host}/ws/simoneb/123456`);
+    const socket = new WebSocket(`${protocol}://${window.location.host}/ws/${userId}/${conv_id}`);
     socketRef.current = socket;
 
     socket.onopen = () => {
@@ -95,8 +95,13 @@ const ChatContent = () => {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (Array.isArray(data)) {
-          setChatMessages(data);
+        const messages = JSON.parse(data);
+        if (Array.isArray(messages)) {
+          console.log('messaggi ws ricevuti in formato array');
+          setChatMessages(messages);
+        }else{
+          console.log('messaggi ws non ricevuti in formato array');
+          console.log(messages);
         }
       } catch (err) {
         console.error("Errore parsing messaggio:", err);
@@ -110,7 +115,7 @@ const ChatContent = () => {
     return () => {
       socket.close();
     };
-  }, []);
+  }, [userId, conv_id]);
 
   // const sendMessage = () => {
   //   if (chatInput.trim() && socketRef.current?.readyState === WebSocket.OPEN) {
@@ -134,7 +139,7 @@ const ChatContent = () => {
   }, [chatMessages]);
 
   const handleSend = () => {
-    if (!chatInput.trim() || !perspective) return;
+    if (!chatInput.trim()) return;
 
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({ text: chatInput }));

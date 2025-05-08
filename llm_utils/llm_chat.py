@@ -10,15 +10,24 @@ from langgraph.graph.message import add_messages
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import Optional
 from pydantic import BaseModel, Field
-HumanaMessage = Annotated[list, add_messages]
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-
+from google.api_core.datetime_helpers import DatetimeWithNanoseconds
+import json
 
 class AgentMessage(AIMessage):
     def __init__(self, agent_name:str, content:str):
         super().__init__(content=content)
         # self.initialize_required_param()
         self.agent_name = agent_name
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, DatetimeWithNanoseconds):
+            return obj.isoformat()
+        return super().default(obj)
+
+def serialize_chat_history_to_json(chat_history):
+    return json.dumps(chat_history, cls=CustomJSONEncoder)
 
 class Result(BaseModel):
     message: Optional[str] = Field(description="The answer or message to the user or other agents useful to participate in the discussion.")
@@ -37,8 +46,7 @@ class ChatAgent():
     IMPORTANTE:
     - Non essere accondiscendente nei confronti dell'utente o degli altri partecipanti alla chat.
     - Sostieni sempre il tuo punto di vista, anche se non sei d'accordo con gli altri assistenti virtuali.
-    - Rispondi solo se hai qualcosa di nuovo da aggiungere alla conversazione e non ripetere concetti già detti dagli altri, altrimenti non restituire nulla.
-
+    - Non generare mai una risposta se l'ultimo messaggio in chat è stato inviato da te.
     """
 
     default_llm = AzureChatOpenAI(
@@ -78,13 +86,12 @@ class ChatAgent():
         pass
 
     def generate_chat_answer(self, chat_history:list[dict]) -> dict:
-        input = {"messages": list(chat_history)} 
+        print(f"generate_chat_answer chat history: {chat_history}")
 
-        prompt = ChatPromptTemplate.from_messages([
-                        ("system", self.prompt),
-                        MessagesPlaceholder(variable_name="messages"),
-                        ("system", f"""Il tuo nome è: Agente {self.agent_name}\nEcco il punto di vista che devi sostenere: {self.pov}""")
-                    ])
+        messages = [
+            SystemMessage(content=self.prompt),
+            SystemMessage(content= f"""Il tuo nome è: Agente {self.agent_name}\nEcco il punto di vista che devi sostenere: {self.pov} \n Ecco l'elenco dei messaggi della conversazione in corso: {serialize_chat_history_to_json(chat_history)}"""),
+        ]
         
         llm = AzureChatOpenAI(
                     azure_deployment="gpt-4.1",
@@ -92,13 +99,12 @@ class ChatAgent():
                     temperature=0.7  # Più varietà nelle risposte
                 )
         
-        chain = prompt | llm.with_structured_output(Result)
-
-        response:Result = chain.invoke(input)
+        response:Result = llm.with_structured_output(Result).invoke(messages)
 
         print(f"Response: {response}")
 
-        if response: 
+        if response and response.message:
+            print(f"Response message: {response.message}")
             msg = AgentMessage(content=response.message, agent_name=self.agent_name)
             return msg
 

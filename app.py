@@ -32,8 +32,7 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-consecutive_agent_responses = 0
-MAX_AGENT_CHAIN = 5
+MAX_AGENT_CHAIN = 4
 
 # Serve React app (build)
 client_path = Path("client/out")
@@ -44,68 +43,85 @@ active_agents_by_conversation: Dict[str, List[ChatAgent]] = {}
 
 async def broadcast(chat_history):
     for client in connected_clients:
-        await client.send_json(chat_history)
+        print(f"Broadcasting to client")
+        chat_history_json = serialize_chat_history_to_json(chat_history)
+        print(f"Broadcasting to client")
+        await client.send_json(chat_history_json)
 
 async def agent_loop(agent: ChatAgent, user_id):
     conversation_id = agent.conv_id
     last_seen = 0
 
     while True:
-        global consecutive_agent_responses
 
-        print(f"Consecutive agent responses: {consecutive_agent_responses}")
+        chat_history = await load_chat_history(db, user_id, conversation_id)
+        print(f"Chat history: {chat_history}")
 
-        if consecutive_agent_responses >= MAX_AGENT_CHAIN:
-            await asyncio.sleep(1)
+        last_msgs_contains_user = False
+        if len(chat_history) >= 4:
+            for msg in chat_history[-4:]:
+                print(f"Message: {msg}")
+                if msg["role"] == "user":
+                    last_msgs_contains_user = True
+
+            if last_msgs_contains_user == False:
+                print(f"User not found in last messages, skipping agent {agent.agent_name}")
+                await asyncio.sleep(1)
+                continue
+
+        # if consecutive_agent_responses >= MAX_AGENT_CHAIN:
+        #     await asyncio.sleep(1)
             
-            # Fine loop → rimuovi agente
-            active_agents_by_conversation[conversation_id].remove(agent)
-            if not active_agents_by_conversation[conversation_id]:
-                del active_agents_by_conversation[conversation_id]
+        #     # Fine loop → rimuovi agente
+        #     active_agents_by_conversation[conversation_id].remove(agent)
+        #     if not active_agents_by_conversation[conversation_id]:
+        #         del active_agents_by_conversation[conversation_id]
 
-            continue
+        #     continue
 
         print(f"Agent {agent.agent_name} is running")
 
-        chat_history = await load_chat_history(db, user_id, conversation_id)
         print(f"Chat history: {chat_history}")
         print(f"Last seen: {last_seen}")
         if len(chat_history) > last_seen:
             last_seen = len(chat_history)
             print("")
             response = agent.generate_chat_answer(chat_history)
-            consecutive_agent_responses += 1
+            # consecutive_agent_responses += 1
             if response:
-                chat_history.append(response)
-                await broadcast()
+                await save_message(db, user_id, conversation_id, response)
+                # chat_history.append(response)
+                chat_history = await load_chat_history(db, user_id, conversation_id)
+                await broadcast(chat_history=chat_history)
 
         await asyncio.sleep(1)
     
 
 @app.websocket("/ws/{user_id}/{conversation_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id: str):
-    global consecutive_agent_responses
+    # global consecutive_agent_responses
 
     await websocket.accept()
     connected_clients.append(websocket)
     try:
-        print(user_id)
-        print(conversation_id)
+        print(f"WebSocket connection established for user {user_id} and conversation {conversation_id}")
 
         chat_history = await load_chat_history(db, user_id, conversation_id)
 
-        await websocket.send_json(chat_history)
+        await websocket.send_json(serialize_chat_history_to_json(chat_history))
         while True:
+            print(f"WebSocket received message for user {user_id} and conversation {conversation_id}")
+
             data = await websocket.receive_json()
-            
-            message = {"role": "user", "content": data["text"]}
-            await save_message(user_id, conversation_id, message)
-            chat_history.append(message)
-            consecutive_agent_responses = 0
+            message = HumanMessage(content=data["text"])
+            print(f"Received message: {message}")
+            await save_message(db, user_id, conversation_id, message)
+            # consecutive_agent_responses = 0
 
+            #TODO: migliorare
             print(f"chathistory: {chat_history}")
-
-            await broadcast()
+            chat_history = await load_chat_history(db, user_id, conversation_id)
+            await broadcast(chat_history=chat_history)
     except WebSocketDisconnect:
         connected_clients.remove(websocket)
 
@@ -115,6 +131,7 @@ async def get_messages(user_id: str, conversation_id: str):
     chat_history = await load_chat_history(db, user_id, conversation_id)
 
     chat_history_json = serialize_chat_history_to_json(chat_history)
+
     return JSONResponse(content=chat_history_json)
 
 @app.post("/api/processpov")
