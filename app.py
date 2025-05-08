@@ -69,15 +69,11 @@ async def agent_loop(agent: ChatAgent, user_id):
                 await asyncio.sleep(1)
                 continue
 
-        # if consecutive_agent_responses >= MAX_AGENT_CHAIN:
-        #     await asyncio.sleep(1)
-            
-        #     # Fine loop → rimuovi agente
-        #     active_agents_by_conversation[conversation_id].remove(agent)
-        #     if not active_agents_by_conversation[conversation_id]:
-        #         del active_agents_by_conversation[conversation_id]
-
-        #     continue
+        last_message = chat_history[-1:][0]
+        if last_message and last_message["agent_name"] == agent.agent_name:
+            print(f"Last message from agent {agent.agent_name}, skipping agent")
+            await asyncio.sleep(1)
+            continue
 
         print(f"Agent {agent.agent_name} is running")
 
@@ -99,8 +95,6 @@ async def agent_loop(agent: ChatAgent, user_id):
 
 @app.websocket("/ws/{user_id}/{conversation_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id: str):
-    # global consecutive_agent_responses
-
     await websocket.accept()
     connected_clients.append(websocket)
     try:
@@ -116,7 +110,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id
             message = HumanMessage(content=data["text"])
             print(f"Received message: {message}")
             await save_message(db, user_id, conversation_id, message)
-            # consecutive_agent_responses = 0
 
             #TODO: migliorare
             print(f"chathistory: {chat_history}")
@@ -146,7 +139,6 @@ async def process_pov(request: Request):
         print("No conversation ID provided, creating a new one.")
         conv_id =str(uuid.uuid4())
 
-        #set first msg
         await save_message(db, user_id=user_id, conversation_id=conv_id,message=HumanMessage(content=user_text))
 
     rewritten_text = create_pov(perspective, user_text)

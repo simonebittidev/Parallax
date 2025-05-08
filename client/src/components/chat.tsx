@@ -117,13 +117,6 @@ const ChatContent = () => {
     };
   }, [userId, conv_id]);
 
-  // const sendMessage = () => {
-  //   if (chatInput.trim() && socketRef.current?.readyState === WebSocket.OPEN) {
-  //     socketRef.current.send(JSON.stringify({ text: chatInput }));
-  //     setChatInput("");
-  //   }
-  // };
-
   // END WB
 
   useEffect(() => {
@@ -145,6 +138,27 @@ const ChatContent = () => {
       socketRef.current.send(JSON.stringify({ text: chatInput }));
       setChatInput("");
     }
+  };
+
+  const handle_new_pov = async (perspective:string) =>  {
+      const response = await fetch('/api/processpov', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          perspective: perspective,
+          userText: chatMessages[0].content,
+          userId: userId,
+          convId: conv_id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Errore nella risposta del server');
+      }
+
+      await getMessages();
   };
 
   return (
@@ -197,23 +211,15 @@ const ChatContent = () => {
             </button>
           </div>
           <div>
-            {['Opposite', 'Neutral', 'Emphatic'].filter(p => p !== perspective && !activePerspectives.includes(p)).map(p => (
+            {['Opposite', 'Neutral', 'Emphatic']
+            .filter(p => !chatMessages.some(msg => msg.agent_name === p))
+            .map(p => (
               <button
-                key={p}
-                // onClick={() => {
-                //   setChatMessages(prev => [
-                //     ...prev,
-                //     {
-                //       role: 'ai',
-                //       agent_name: p as ChatMessage['agent_name'],
-                //       content: `${rewritten}`,
-                //     }
-                //   ]);
-                //   setActivePerspectives(prev => [...prev, p]);
-                // }}
-                className="mt-2 inline-flex items-center px-6 py-2 bg-gray-100 rounded-xl border border-gray-300 hover:bg-gray-200 transition mr-2"
+              key={p}
+              onClick={() => handle_new_pov(p)}
+              className="mt-2 inline-flex items-center px-6 py-2 bg-gray-100 rounded-xl border border-gray-300 hover:bg-gray-200 transition mr-2"
               >
-                ➕ Aggiungi {p}
+              ➕ Aggiungi {p}
               </button>
             ))}
           </div>
