@@ -14,14 +14,21 @@ const TypewriterText = ({ text }: { text: string }) => {
   useEffect(() => {
     indexRef.current = 0;
     setDisplayedText('');
-    const interval = setInterval(() => {
-      setDisplayedText(prev => prev + text.charAt(indexRef.current));
-      indexRef.current += 1;
-      if (indexRef.current >= text.length) {
-        clearInterval(interval);
+
+    const type = () => {
+      setDisplayedText(prev => {
+        const nextChar = text.charAt(indexRef.current);
+        indexRef.current += 1;
+        return prev + nextChar;
+      });
+
+      if (indexRef.current < text.length) {
+        setTimeout(type, 15);
       }
-    }, 15);
-    return () => clearInterval(interval);
+    };
+
+    const timeout = setTimeout(type, 300); // ritardo iniziale di 300ms
+    return () => clearTimeout(timeout);
   }, [text]);
 
   return <span>{displayedText}</span>;
@@ -40,6 +47,8 @@ const ChatContent = () => {
   const conv_id = params.get('conv_id') as string || null;
   const [activePerspectives, setActivePerspectives] = useState<string[]>([]);
   const [chatInput, setChatInput] = useState('');
+  const [suggestionsVisible, setSuggestionsVisible] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const socketRef = useRef<WebSocket | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -156,8 +165,20 @@ const ChatContent = () => {
   const handleSend = () => {
     if (!chatInput.trim()) return;
 
+    let agent = null;
+    let contentToSend = chatInput.trim();
+
+    const match = contentToSend.match(/^@(\w+)\s+(.*)/);
+    if (match) {
+      const tag = match[1].toLowerCase();
+      if (['opposite', 'neutral', 'emphatic'].includes(tag)) {
+        agent = tag.charAt(0).toUpperCase() + tag.slice(1);
+        contentToSend = match[2];
+      }
+    }
+
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({ text: chatInput }));
+      socketRef.current.send(JSON.stringify({ text: contentToSend, target_agent: agent }));
       setChatInput("");
     }
   };
@@ -219,10 +240,35 @@ const ChatContent = () => {
           <div tabIndex={0} className="mt-2 flex gap-2 border p-2 rounded-2xl border-gray-300 bg-gray-100 h-20 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:outline-none">
             <textarea
               value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setChatInput(value);
+                if (value.endsWith('@')) {
+                  setFilteredSuggestions(['Opposite', 'Neutral', 'Emphatic']);
+                  setSuggestionsVisible(true);
+                } else {
+                  setSuggestionsVisible(false);
+                }
+              }}
               placeholder="Write your message..."
               className="flex-1 hover:bg-gray-100 focus:outline-none"
             />
+            {suggestionsVisible && (
+              <div className="absolute mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 p-2">
+                {filteredSuggestions.map((s) => (
+                  <div
+                    key={s}
+                    className="cursor-pointer px-2 py-1 hover:bg-indigo-100"
+                    onClick={() => {
+                      setChatInput(chatInput + s + ' ');
+                      setSuggestionsVisible(false);
+                    }}
+                  >
+                    @{s}
+                  </div>
+                ))}
+              </div>
+            )}
             <button
               onClick={handleSend}
               className="bottom-3 right-3 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-600-dark"
