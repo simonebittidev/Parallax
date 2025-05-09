@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { logOut, auth } from '../lib/firebase'
+import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -132,7 +133,7 @@ export default function Home() {
   return (
     <div className="bg-white">
       <Navbar></Navbar>
-      <div className="relative isolate px-20 pt-20 lg:px-8">
+      <div className="relative isolate pt-20 px-5">
         <div className="mx-auto max-w-2xl py-15">
           {/* <h1 className="text-4xl font-bold tracking-tight text-indigo-600">Parallax</h1> */}
             <p className="mt-2 text-lg text-neutral-600 font-bold">Reflect. Rephrase. Understand.</p>
@@ -143,7 +144,7 @@ export default function Home() {
             </p>
         </div>
       </div>
-      <div className="relative isolate px-20 lg:px-8">
+      <div className="relative isolate px-5">
       <div className="mx-auto max-w-2xl py-5">
       {!inChat && (
         <section id="mainSection">
@@ -175,7 +176,8 @@ export default function Home() {
               onChange={e => setInputText(e.target.value)}
               rows={4}
               placeholder="Write here your opinion..."
-              className="w-full pr-14 pl-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              className="w-full pr-14 pl-4 py-3 border border-gray-200 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600"
             />
             <button onClick={handleSubmit} className="absolute bottom-3 right-3 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-600-dark">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
@@ -185,9 +187,10 @@ export default function Home() {
           </div>
 
           {showResponse && (
-            <div className="mt-6 p-6 border border-indigo-600/30 rounded-2xl bg-indigo-600/5 text-neutral-800 shadow-md">
+            <div className="mt-6 p-6 rounded-2xl bg-indigo-600/5 text-neutral-800">
               <p className="text-base mb-4 leading-relaxed">{rewrittenText}</p>
                 <button onClick={handleChatStart} className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-600-dark transition">
+                <ChatBubbleLeftRightIcon className="h-5 w-5" />
                 Chat with this perspective
                 <svg xmlns="http://www.w3.org/2000/svg" className="ml-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd" />

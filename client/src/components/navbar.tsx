@@ -50,6 +50,11 @@ export default function Navbar() {
               </div>
               <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
                 <MenuItem>
+                  <div>
+                    <p className="px-4 py-3 text-sm font-bold text-gray-700">Welcome, {user.displayName}</p>
+                  </div>
+                </MenuItem>
+                <MenuItem>
                   {({ active }) => (
                     <a
                       href="/profile"
@@ -95,8 +100,7 @@ export default function Navbar() {
         <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm">
           <div className="flex items-center justify-between">
             <a href="#" className="-m-1.5 p-1.5">
-              <span className="sr-only">Your Company</span>
-              <h1 className="text-2xl font-bold text-indigo-600">Parallax</h1>
+              <span className="sr-only"></span>
             </a>
             <button
               type="button"
@@ -111,7 +115,29 @@ export default function Navbar() {
             <div className="-my-6 divide-y divide-gray-500/10">
               <div className="py-6">
                 {user ? (
-                  <p className="text-sm font-medium text-gray-700">Welcome, {user.displayName || user.email}</p>
+                  <div>
+                     <p className="px-2 py-2 font-bold text-gray-700">Welcome, {user.displayName || user.email}</p>
+
+                     
+                      <a
+                        href="/profile"
+                        className={`block px-2 py-2 text-gray-700 `}
+                      >
+                        Your Profile
+                      </a>
+                      <a
+                        href="#"
+                        className={`block px-2 py-2 text-gray-700`}
+                      >
+                        Settings
+                      </a>
+                      <button
+                        onClick={() => logOut()}
+                        className={`w-full text-left block px-2 py-2 text-red-700`}
+                      >
+                        Sign out
+                      </button>
+                  </div>
                 ) : (
                   <a
                     href="/login"

@@ -89,7 +89,7 @@ export default function SignInPage() {
             <div>
               <button
                 type="submit"
-                className="w-full py-2 mt-4 rounded-md hover:bg-gray-100 border bg-indigo-600 text-white"
+                className="w-full py-2 mt-4 rounded-md hover:bg-indigo-800 border bg-indigo-600 text-white"
               >
                 Sign in
               </button>

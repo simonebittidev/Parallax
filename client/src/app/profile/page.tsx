@@ -67,24 +67,24 @@ useEffect(() => {
                    
                     <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                     <div className="col-span-full">
-                      <label htmlFor="photo" className="block text-sm/6 font-medium text-gray-900">
-                        Photo
+                      <label htmlFor="photo" className="block text-sm/6 font-bold text-gray-900">
+                        Name
                       </label>
                       <div className="mt-2 flex items-center gap-x-3">
-                        {photoURL && (
+                        {/* {photoURL && (
                           <img
                             src={photoURL}
                             alt="Profile"
-                            className="w-24 h-24 rounded-full object-cover"
+                            className="w-10 h-10 rounded-full object-cover"
                             />
-                        )}
+                        )} */}
                         <label htmlFor="username" className="text-sm/6 font-medium text-gray-900">
                           {firstName} {lastName}
                         </label>
                       </div>
                     </div>
                       <div className="sm:col-span-4">
-                        <label htmlFor="username" className="block text-sm/6 font-medium text-gray-900">
+                        <label htmlFor="username" className="block text-sm/6 font-bold text-gray-900">
                           Email
                         </label>
                         <div className="mt-2">
