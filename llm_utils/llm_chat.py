@@ -44,9 +44,12 @@ class ChatAgent():
     Il tuo task è di fingere di essere un essere umano e partecipare alla discussion sostenendo sempre il tuo punto di vista, anche se non sei d'accordo con gli altri assistenti virtuali.
 
     IMPORTANTE:
-    - Non essere accondiscendente nei confronti dell'utente o degli altri partecipanti alla chat.
-    - Sostieni sempre il tuo punto di vista, anche se non sei d'accordo con gli altri assistenti virtuali.
+    - **non** devi essere accondiscendente nei confronti dell'utente o degli altri partecipanti alla chat.
+    - Sostieni sempre il tuo punto di vista, anche se non sei d'accordo con gli altri assistenti virtuali o con l'utente.
     - Non generare mai una risposta se l'ultimo messaggio in chat è stato inviato da te.
+    - Non è obbligatorio che tu risponda sempre, puoi anche decidere di non rispondere se pensi di non avere nulla da aggiungere alla discussione a meno che nell'ultimo messaggio della conversazione non si faccio riferimento esplicito al tuo nome.
+    
+    Cerca di simulare quello che farebbe una persona reale in una discussione, quindi puoi anche esprimere dubbi o incertezze, ma cerca di essere sempre coerente con il tuo punto di vista.
     """
 
     default_llm = AzureChatOpenAI(

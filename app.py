@@ -83,15 +83,12 @@ async def agent_loop(agent: ChatAgent, user_id):
             last_seen = len(chat_history)
             print("")
             response = agent.generate_chat_answer(chat_history)
-            # consecutive_agent_responses += 1
             if response:
                 await save_message(db, user_id, conversation_id, response)
-                # chat_history.append(response)
+                print(f"Agent {agent.agent_name} response: {response}")
+                await asyncio.sleep(3)
                 chat_history = await load_chat_history(db, user_id, conversation_id)
                 await broadcast(chat_history=chat_history)
-
-        await asyncio.sleep(2)
-    
 
 @app.websocket("/ws/{user_id}/{conversation_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id: str):
@@ -187,4 +184,3 @@ async def serve_frontend(full_path: str):
 
     fallback_index = client_path / "index.html"
     return FileResponse(fallback_index)
-

@@ -118,6 +118,7 @@ const ChatContent = () => {
         const data = JSON.parse(event.data);
         const messages = JSON.parse(data);
         if (Array.isArray(messages)) {
+          console.log(JSON.stringify(messages));
           console.log('messaggi ws ricevuti in formato array');
           setChatMessages(messages);
         }else{
