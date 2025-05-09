@@ -66,13 +66,13 @@ async def agent_loop(agent: ChatAgent, user_id):
 
             if last_msgs_contains_user == False:
                 print(f"User not found in last messages, skipping agent {agent.agent_name}")
-                await asyncio.sleep(1)
+                await asyncio.sleep(2)
                 continue
 
         last_message = chat_history[-1:][0]
         if last_message and last_message["agent_name"] == agent.agent_name:
             print(f"Last message from agent {agent.agent_name}, skipping agent")
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
             continue
 
         print(f"Agent {agent.agent_name} is running")
@@ -90,7 +90,7 @@ async def agent_loop(agent: ChatAgent, user_id):
                 chat_history = await load_chat_history(db, user_id, conversation_id)
                 await broadcast(chat_history=chat_history)
 
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
     
 
 @app.websocket("/ws/{user_id}/{conversation_id}")

@@ -7,6 +7,26 @@ import { onAuthStateChanged, User } from 'firebase/auth'
 import { logOut, auth } from '../lib/firebase'
 import { PlusIcon } from '@heroicons/react/24/solid';
 
+const TypewriterText = ({ text }: { text: string }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    indexRef.current = 0;
+    setDisplayedText('');
+    const interval = setInterval(() => {
+      setDisplayedText(prev => prev + text.charAt(indexRef.current));
+      indexRef.current += 1;
+      if (indexRef.current >= text.length) {
+        clearInterval(interval);
+      }
+    }, 15);
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <span>{displayedText}</span>;
+};
+
 type ChatMessage = {
   role: 'user' | 'ai';
   agent_name: 'Opposite' | 'Neutral' | 'Emphatic';
@@ -184,17 +204,17 @@ const ChatContent = () => {
               <div
                 className={`rounded-xl px-5 py-3 text-sm max-w-[80%] whitespace-pre-line ${msg.role === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'}`}
               >
-                {msg.content}
+                {msg.role === 'user' ? msg.content : <TypewriterText text={msg.content} />}
               </div>
             </div>
           ))}
         </div>
 
         <div className="p-4 bg-white">
-          <a href="/" className="">
+            <a href="/" className="">
             <span aria-hidden="true" className='mr-1'>&larr;</span>
-            Genera una nuova prospettiva
-          </a>
+            Generate a new perspective
+            </a>
           <div tabIndex={0} className="mt-2 flex gap-2 border p-2 rounded-2xl border-gray-300 bg-gray-100 h-20 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:outline-none">
             <textarea
               value={chatInput}

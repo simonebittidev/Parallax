@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { logOut, auth } from '../lib/firebase'
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import LoginAlert from '@/components/login-alert';
 
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -41,6 +42,7 @@ export default function Home() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const activeAgents = useRef<Set<'Opposite' | 'Neutral' | 'Emphatic'>>(new Set());
   const chatBoxRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false)
 
   const handlePerspectiveClick = (perspective: 'Opposite' | 'Neutral' | 'Emphatic') => {
     setSelectedPerspective(perspective);
@@ -55,6 +57,11 @@ export default function Home() {
   };
 
   const handleSubmit = async () => {
+    if(!userId) {
+      setOpen(true)
+      return;
+    }
+
     if (!inputText || !selectedPerspective) {
       alert('Per favore, inserisci un testo e seleziona una prospettiva.');
       return;
@@ -133,6 +140,7 @@ export default function Home() {
   return (
     <div className="bg-white">
       <Navbar></Navbar>
+      <LoginAlert open={open} setOpen={setOpen}/>
       <div className="relative isolate pt-20 px-5">
         <div className="mx-auto max-w-2xl py-15">
           {/* <h1 className="text-4xl font-bold tracking-tight text-indigo-600">Parallax</h1> */}
@@ -190,7 +198,7 @@ export default function Home() {
             <div className="mt-6 p-6 rounded-2xl bg-indigo-600/5 text-neutral-800">
               <p className="text-base mb-4 leading-relaxed">{rewrittenText}</p>
                 <button onClick={handleChatStart} className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-600-dark transition">
-                <ChatBubbleLeftRightIcon className="h-5 w-5" />
+                <ChatBubbleLeftRightIcon className="h-5 w-5 mr-2" />
                 Chat with this perspective
                 <svg xmlns="http://www.w3.org/2000/svg" className="ml-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10.293 15.707a1 1 0 010-1.414L13.586 11H4a1 1 0 110-2h9.586l-3.293-3.293a1 1 0 111.414-1.414l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0z" clipRule="evenodd" />

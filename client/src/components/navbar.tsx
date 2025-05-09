@@ -21,19 +21,28 @@ export default function Navbar() {
     <header className="absolute inset-x-0 top-0 z-50">
       <nav aria-label="Global" className="flex items-center justify-between p-6 lg:px-8">
         <div className="flex lg:flex-1">
-          <a href="#" className="-m-1.5 p-1.5">
+          <a href="/" className="-m-1.5 p-1.5">
             <h1 className="text-2xl font-bold text-indigo-600">Parallax</h1>
           </a>
         </div>
         <div className="flex lg:hidden">
+        {user ? (
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
             className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
           >
             <span className="sr-only">Open main menu</span>
-            <Bars3Icon aria-hidden="true" className="size-6" />
+            <img
+                    src={user.photoURL || '/default-avatar.png'}
+                    alt="User avatar"
+                    className="size-8 rounded-full object-cover"
+                  />
+            {/* <Bars3Icon aria-hidden="true" className="size-6" /> */}
           </button>
+        ) : (<a href="/login" className="text-sm font-semibold text-gray-900">
+          Log in <span aria-hidden="true">&rarr;</span>
+        </a>)}
         </div>
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
           {user ? (
@@ -64,7 +73,7 @@ export default function Navbar() {
                     </a>
                   )}
                 </MenuItem>
-                <MenuItem>
+                {/* <MenuItem>
                   {({ active }) => (
                     <a
                       href="#"
@@ -73,7 +82,7 @@ export default function Navbar() {
                       Settings
                     </a>
                   )}
-                </MenuItem>
+                </MenuItem> */}
                 <MenuItem>
                   {({ active }) => (
                     <button
@@ -125,12 +134,12 @@ export default function Navbar() {
                       >
                         Your Profile
                       </a>
-                      <a
+                      {/* <a
                         href="#"
                         className={`block px-2 py-2 text-gray-700`}
                       >
                         Settings
-                      </a>
+                      </a> */}
                       <button
                         onClick={() => logOut()}
                         className={`w-full text-left block px-2 py-2 text-red-700`}
