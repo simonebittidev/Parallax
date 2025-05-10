@@ -36,6 +36,11 @@ stages:
       inputs:
         versionSpec: '$(pythonVersion)'
       displayName: 'Use Python $(pythonVersion)'
+    
+    - task: UseNode@1
+      inputs:
+        version: '18.x'
+      displayName: 'Use Node.js'
 
     - script: |
         python -m venv antenv
@@ -50,7 +55,7 @@ stages:
         npm ci
         npm run build:static
       displayName: 'Build static frontend (Next.js)'
-      workingDirectory: $(projectRoot)/client  # <-- cambia se necessario
+      workingDirectory: $(projectRoot)/client
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'
