@@ -1,5 +1,6 @@
 import base64
 import os
+import random
 from typing import Dict, List
 import uuid
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
@@ -38,22 +39,30 @@ MAX_AGENT_CHAIN = 4
 client_path = Path("client/out")
 app.mount("/static", StaticFiles(directory=client_path), name="static")
 
-connected_clients = []
+connected_clients: Dict[str, List[WebSocket]] = {}
 active_agents_by_conversation: Dict[str, List[ChatAgent]] = {}
 
-async def broadcast(chat_history):
-    for client in connected_clients:
-        print(f"Broadcasting to client")
-        chat_history_json = serialize_chat_history_to_json(chat_history)
-        print(f"Broadcasting to client")
-        await client.send_json(chat_history_json)
+async def broadcast(chat_history, conversation_id: str):
+      print(f"Broadcasting to clients for conversation {conversation_id}")
+      if conversation_id in connected_clients:
+        for client in connected_clients[conversation_id]:
+            print(f"Broadcasting to client {conversation_id}")
+            chat_history_json = serialize_chat_history_to_json(chat_history)
+            await client.send_json(chat_history_json)
+
+async def broadcast_typing_event(agent_name: str, conversation_id: str):
+    print(f"Broadcasting typing event to clients for conversation {conversation_id}")
+    print(f"Connected clients: {connected_clients}")
+    if conversation_id in connected_clients:
+        for client in connected_clients[conversation_id]:
+            print(f"Broadcasting typing event to client {conversation_id}")
+            await client.send_json({"event": "typing", "agent_name": agent_name})
 
 async def agent_loop(agent: ChatAgent, user_id):
     conversation_id = agent.conv_id
     last_seen = 0
 
     while True:
-
         chat_history = await load_chat_history(db, user_id, conversation_id)
         print(f"Chat history: {chat_history}")
 
@@ -81,20 +90,29 @@ async def agent_loop(agent: ChatAgent, user_id):
         print(f"Last seen: {last_seen}")
         if len(chat_history) > last_seen:
             last_seen = len(chat_history)
-            print("")
+
+            await broadcast_typing_event(agent.agent_name, conversation_id=conversation_id)
+            await asyncio.sleep(random.uniform(1, 6))
+
             response = agent.generate_chat_answer(chat_history)
             if response:
                 await save_message(db, user_id, conversation_id, response)
                 print(f"Agent {agent.agent_name} response: {response}")
-                await asyncio.sleep(3)
                 chat_history = await load_chat_history(db, user_id, conversation_id)
-                await broadcast(chat_history=chat_history)
-
+                await broadcast(chat_history=chat_history, conversation_id=conversation_id)
+        else:
+            await asyncio.sleep(2)
+            
 @app.websocket("/ws/{user_id}/{conversation_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id: str):
     await websocket.accept()
-    connected_clients.append(websocket)
+
     try:
+        if conversation_id not in connected_clients:
+            connected_clients[conversation_id] = []
+            connected_clients[conversation_id].append(websocket)
+            # connected_clients.append(websocket)
+
         print(f"WebSocket connection established for user {user_id} and conversation {conversation_id}")
 
         chat_history = await load_chat_history(db, user_id, conversation_id)
@@ -108,12 +126,13 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id
             print(f"Received message: {message}")
             await save_message(db, user_id, conversation_id, message)
 
-            #TODO: migliorare
             print(f"chathistory: {chat_history}")
             chat_history = await load_chat_history(db, user_id, conversation_id)
-            await broadcast(chat_history=chat_history)
+            await broadcast(chat_history=chat_history, conversation_id=conversation_id)
     except WebSocketDisconnect:
-        connected_clients.remove(websocket)
+        print(f"WebSocket disconnesso per user {user_id}, conv {conversation_id}")
+        if conversation_id in connected_clients and websocket in connected_clients[conversation_id]:
+            connected_clients[conversation_id].remove(websocket)
 
 @app.get("/messages/{user_id}/{conversation_id}")
 async def get_messages(user_id: str, conversation_id: str):

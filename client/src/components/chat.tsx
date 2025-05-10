@@ -52,6 +52,8 @@ const ChatContent = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const socketRef = useRef<WebSocket | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState<string[]>([]);
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
@@ -114,8 +116,17 @@ const ChatContent = () => {
 
   //initialize wbsocket
   useEffect(() => {
+
+    if (!userId || !conv_id) {
+      console.error('User ID or conversation ID is not available.');
+      return;
+    }
+    
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+
     const socket = new WebSocket(`${protocol}://${window.location.host}/ws/${userId}/${conv_id}`);
+    
+    console.log(`WebSocket URL: ${protocol}://${window.location.host}/ws/${userId}/${conv_id}`);
     socketRef.current = socket;
 
     socket.onopen = () => {
@@ -125,15 +136,35 @@ const ChatContent = () => {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        const messages = JSON.parse(data);
-        if (Array.isArray(messages)) {
-          console.log(JSON.stringify(messages));
-          console.log('messaggi ws ricevuti in formato array');
-          setChatMessages(messages);
-        }else{
-          console.log('messaggi ws non ricevuti in formato array');
-          console.log(messages);
+
+        if (typeof data === "object" && data !== null && "event" in data) {
+          const typingMsg = `${data["agent_name"]} is typing...`;
+          setIsTyping(prev => (prev.includes(typingMsg) ? prev : [...prev, typingMsg]));
+
+          // Timeout automatico per rimuovere dopo 3s
+          setTimeout(() => {
+            setIsTyping(prev => prev.filter(item => item !== typingMsg));
+          }, 3000);
         }
+        else{
+          const messages = JSON.parse(data);
+          if (Array.isArray(messages)) {
+            const lastElement = messages[messages.length - 1];
+
+            setIsTyping(prev => prev.filter(item => item !== `${lastElement.agent_name} is typing...`));
+
+            console.log(JSON.stringify(messages));
+            console.log('messaggi ws ricevuti in formato array');
+            setChatMessages(messages);
+          }else{
+            console.log('messaggi ws non ricevuti in formato array');
+            console.log(messages);
+          }
+        }
+
+
+
+        
       } catch (err) {
         console.error("Errore parsing messaggio:", err);
       }
@@ -226,8 +257,18 @@ const ChatContent = () => {
               <div
                 className={`rounded-xl px-5 py-3 text-sm max-w-[80%] whitespace-pre-line ${msg.role === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'}`}
               >
-                {msg.role === 'user' ? msg.content : <TypewriterText text={msg.content} />}
+                {/* {msg.role === 'user' ? msg.content : <TypewriterText text={msg.content} />} */}
+                {msg.content}
               </div>
+
+              
+
+            </div>
+          ))}
+
+          {isTyping.map((typing, i) => (
+            <div className="text-gray-500 text-sm px-10">
+              {typing}
             </div>
           ))}
         </div>
@@ -280,16 +321,19 @@ const ChatContent = () => {
           </div>
           <div>
             {['Opposite', 'Neutral', 'Emphatic']
-            .filter(p => !chatMessages.some(msg => msg.agent_name === p))
-            .map(p => (
-              <button
-              key={p}
-              onKeyDown={(e) => e.key === 'Enter' && handle_new_pov(p)}
-              onClick={() => handle_new_pov(p)}
-              className="mt-2 inline-flex items-center px-6 py-2 bg-gray-100 rounded-xl border border-gray-300 hover:bg-gray-200 transition mr-2"
-              >
-              <PlusIcon className="size-5 mr-2"/> {p}
-              </button>
+              .filter(p => !chatMessages.some(msg => msg.agent_name === p) && !activePerspectives.includes(p))
+              .map(p => (
+                <button
+                  key={p}
+                  onKeyDown={(e) => e.key === 'Enter' && handle_new_pov(p)}
+                  onClick={() => {
+                    setActivePerspectives(prev => [...prev, p]); // nasconde subito il pulsante
+                    handle_new_pov(p);
+                  }}
+                  className="mt-2 inline-flex items-center px-6 py-2 bg-gray-100 rounded-xl border border-gray-300 hover:bg-gray-200 transition mr-2"
+                >
+                  <PlusIcon className="size-5 mr-2" /> {p}
+                </button>
             ))}
           </div>
         </div>

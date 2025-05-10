@@ -1,3 +1,5 @@
+import { HeartIcon } from '@heroicons/react/24/outline';
+
 // components/Footer.tsx
 export default function Footer() {
     return (
@@ -32,7 +34,7 @@ export default function Footer() {
             </p>
 
             <p className="text-sm text-gray-400 text-center">
-              Made with from <a href="/" className="text-bold text-gray-600 underline">Simone Bitti</a>
+              Made with from <span className="text-indigo-600">♥</span> <a href="/" className="text-bold text-gray-600 underline">Simone Bitti</a>
             </p>
           </div>
         </div>

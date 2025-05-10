@@ -87,7 +87,7 @@ export default function Navbar() {
                   {({ active }) => (
                     <button
                       onClick={() => logOut()}
-                      className={`w-full text-left block px-4 py-2 text-sm text-gray-700 ${active ? 'bg-gray-100' : ''}`}
+                      className={`w-full text-left block px-4 py-2 text-sm text-red-700 ${active ? 'bg-gray-100' : ''}`}
                     >
                       Sign out
                     </button>

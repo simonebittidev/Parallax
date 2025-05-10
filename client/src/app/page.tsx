@@ -11,6 +11,7 @@ import LoginAlert from '@/components/login-alert';
 
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   
   useEffect(() => {
@@ -67,6 +68,8 @@ export default function Home() {
       return;
     }
 
+    setLoading(true);
+
     try {
       const response = await fetch('/api/processpov', {
         method: 'POST',
@@ -88,9 +91,11 @@ export default function Home() {
       setRewrittenText(data.pov);
       setConvId(data.conv_id);
 
+      setLoading(false);
       setShowResponse(true);
     } catch (error) {
       console.error('Errore durante la chiamata al server:', error);
+      setLoading(false);
       alert('Si è verificato un errore durante la comunicazione con il server.');
     }
   };
@@ -184,7 +189,7 @@ export default function Home() {
               onChange={e => setInputText(e.target.value)}
               rows={4}
               placeholder="Write here your opinion..."
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              onKeyDown={(e) => { if (e.key === 'Enter'){e.preventDefault(); handleSubmit();}}}
               className="w-full pr-14 pl-4 py-3 border border-gray-200 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600"
             />
             <button onClick={handleSubmit} className="absolute bottom-3 right-3 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-600-dark">
@@ -192,7 +197,14 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </button>
+            
           </div>
+
+          {loading && (
+              <div className='mt-6 p-6 rounded-2xl bg-indigo-600/5 text-neutral-800'>
+                <p>Processing…</p>
+              </div>
+          )}
 
           {showResponse && (
             <div className="mt-6 p-6 rounded-2xl bg-indigo-600/5 text-neutral-800">
