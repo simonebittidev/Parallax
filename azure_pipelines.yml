@@ -81,6 +81,12 @@ stages:
         archiveType: zip
         archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
         replaceExistingArchive: true
+        archiveFilePatterns: |
+          **/*
+          !**/node_modules/**
+          !**/__pycache__/**
+          !**/.next/cache/**
+          !**/.venv/**
 
     - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
       displayName: 'Upload package'
