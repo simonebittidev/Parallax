@@ -46,6 +46,12 @@ stages:
       workingDirectory: $(projectRoot)
       displayName: "Install requirements"
 
+    - script: |
+        npm ci
+        npm run build:static
+      displayName: 'Build static frontend (Next.js)'
+      workingDirectory: $(projectRoot)/client  # <-- cambia se necessario
+
     - task: ArchiveFiles@2
       displayName: 'Archive files'
       inputs:
