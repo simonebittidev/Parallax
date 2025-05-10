@@ -53,7 +53,7 @@ stages:
 
     - script: |
         npm ci
-        npm run build:static
+        npm run build
       displayName: 'Build static frontend (Next.js)'
       workingDirectory: $(projectRoot)/client
       env:
@@ -63,6 +63,15 @@ stages:
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: $(NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET)
         NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: $(NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID)
         NEXT_PUBLIC_FIREBASE_APP_ID: $(NEXT_PUBLIC_FIREBASE_APP_ID)
+    
+    - task: ArchiveFiles@2
+      displayName: 'Archive static frontend'
+      inputs:
+        rootFolderOrFile: '$(projectRoot)/client/out'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'
