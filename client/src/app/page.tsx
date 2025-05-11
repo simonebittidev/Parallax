@@ -9,6 +9,8 @@ import { logOut, auth } from '../lib/firebase'
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import LoginAlert from '@/components/login-alert';
 import Footer from '@/components/footer';
+import ErrorAlert from '@/components/error-alert';
+
 
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -45,6 +47,8 @@ export default function Home() {
   const activeAgents = useRef<Set<'Opposite' | 'Neutral' | 'Emphatic'>>(new Set());
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false)
+  const [openError, setOpenError] = useState(false)
+
 
   const handlePerspectiveClick = (perspective: 'Opposite' | 'Neutral' | 'Emphatic') => {
     setSelectedPerspective(perspective);
@@ -97,7 +101,7 @@ export default function Home() {
     } catch (error) {
       console.error('Errore durante la chiamata al server:', error);
       setLoading(false);
-      alert('Si è verificato un errore durante la comunicazione con il server.');
+      setOpenError(true);
     }
   };
 
@@ -149,6 +153,7 @@ export default function Home() {
       <Navbar></Navbar>
       <LoginAlert open={open} setOpen={setOpen}/>
       <div className="relative isolate pt-20 px-5">
+        <ErrorAlert open={openError} setOpen={setOpenError}/>
         <div className="mx-auto max-w-2xl py-15">
           {/* <h1 className="text-4xl font-bold tracking-tight text-indigo-600">Parallax</h1> */}
             <p className="mt-2 text-lg text-neutral-600 font-bold">Reflect. Rephrase. Understand.</p>

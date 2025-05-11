@@ -63,6 +63,10 @@ async def agent_loop(agent: ChatAgent, user_id):
     last_seen = 0
 
     while True:
+        if not connected_clients.get(conversation_id):
+            print(f"No clients for conversation {conversation_id}, stopping agent {agent.agent_name}")
+            break
+
         chat_history = await load_chat_history(db, user_id, conversation_id)
         print(f"Chat history: {chat_history}")
 

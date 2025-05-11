@@ -274,10 +274,27 @@ const ChatContent = () => {
         </div>
 
         <div className="p-4 bg-white">
-            <a href="/" className="">
+            {/* <a href="/" className="">
             <span aria-hidden="true" className='mr-1'>&larr;</span>
             Generate a new perspective
-            </a>
+            </a> */}
+             <div>
+            {['Opposite', 'Neutral', 'Emphatic']
+              .filter(p => !chatMessages.some(msg => msg.agent_name === p) && !activePerspectives.includes(p))
+              .map(p => (
+                <button
+                  key={p}
+                  onKeyDown={(e) => e.key === 'Enter' && handle_new_pov(p)}
+                  onClick={() => {
+                    setActivePerspectives(prev => [...prev, p]); // nasconde subito il pulsante
+                    handle_new_pov(p);
+                  }}
+                  className="mt-2 inline-flex items-center px-6 py-2 bg-gray-100 rounded-full border border-gray-300 hover:bg-gray-200 transition mr-2"
+                >
+                  <PlusIcon className="size-5 mr-2" /> {p}
+                </button>
+            ))}
+          </div>
           <div tabIndex={0} className="mt-2 flex gap-2 border p-2 rounded-2xl border-gray-300 bg-gray-100 h-20 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:outline-none">
             <textarea
               value={chatInput}
@@ -320,23 +337,7 @@ const ChatContent = () => {
               </svg>
             </button>
           </div>
-          <div>
-            {['Opposite', 'Neutral', 'Emphatic']
-              .filter(p => !chatMessages.some(msg => msg.agent_name === p) && !activePerspectives.includes(p))
-              .map(p => (
-                <button
-                  key={p}
-                  onKeyDown={(e) => e.key === 'Enter' && handle_new_pov(p)}
-                  onClick={() => {
-                    setActivePerspectives(prev => [...prev, p]); // nasconde subito il pulsante
-                    handle_new_pov(p);
-                  }}
-                  className="mt-2 inline-flex items-center px-6 py-2 bg-gray-100 rounded-xl border border-gray-300 hover:bg-gray-200 transition mr-2"
-                >
-                  <PlusIcon className="size-5 mr-2" /> {p}
-                </button>
-            ))}
-          </div>
+         
         </div>
       </div>
   );
