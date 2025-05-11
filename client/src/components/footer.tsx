@@ -4,11 +4,11 @@ import { HeartIcon } from '@heroicons/react/24/outline';
 export default function Footer() {
     return (
         
-      <footer className="bg-white">
-        <div className="mx-auto px-6 py-12 lg:px-8">
-          <div className="xl:grid xl:grid-cols-6 mx-5  border-t border-b border-gray-200 py-10 px-10">
+      <footer className="px-5 py-5">
+        <div className="mx-auto border-t border-gray-200">
+          <div className="xl:grid xl:grid-cols-6">
             <div className="space-y-6 xl:col-span-2 mt-10">
-              <div className="text-3xl font-bold text-indigo-600">Parallax</div>
+              <a href='/' className="text-3xl font-bold text-indigo-600">Parallax</a>
               <p className="text-gray-500 text-sm">
                 Making the world a better place through dialog.
               </p>

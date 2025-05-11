@@ -292,6 +292,7 @@ const ChatContent = () => {
                 }
               }}
               placeholder="Write your message..."
+              onKeyDown={(e) => { if (e.key === 'Enter'){e.preventDefault(); handleSend();}}}
               className="flex-1 hover:bg-gray-100 focus:outline-none"
             />
             {suggestionsVisible && (

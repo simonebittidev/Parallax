@@ -8,6 +8,7 @@ import { onAuthStateChanged, User } from 'firebase/auth'
 import { logOut, auth } from '../lib/firebase'
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import LoginAlert from '@/components/login-alert';
+import Footer from '@/components/footer';
 
 export default function Home() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -143,6 +144,7 @@ export default function Home() {
   };
 
   return (
+    <>
     <div className="bg-white">
       <Navbar></Navbar>
       <LoginAlert open={open} setOpen={setOpen}/>
@@ -260,5 +262,7 @@ export default function Home() {
     </div>
 
     </div>
+    <Footer/>
+    </>
   )
 }
