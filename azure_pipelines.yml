@@ -73,20 +73,20 @@ stages:
         archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
         replaceExistingArchive: true
 
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
-      inputs:
-        rootFolderOrFile: '$(projectRoot)'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-        replaceExistingArchive: true
-        archiveFilePatterns: |
-          **/*
-          !**/node_modules/**
-          !**/__pycache__/**
-          !**/.next/cache/**
-          !**/.venv/**
+    # - task: ArchiveFiles@2
+    #   displayName: 'Archive files'
+    #   inputs:
+    #     rootFolderOrFile: '$(projectRoot)'
+    #     includeRootFolder: false
+    #     archiveType: zip
+    #     archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+    #     replaceExistingArchive: true
+    
+    - script: |
+        zip -r $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip . \
+          -x "**/node_modules/**" \
+      workingDirectory: $(projectRoot)
+      displayName: "Zip project with exclusions"
 
     - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
       displayName: 'Upload package'
