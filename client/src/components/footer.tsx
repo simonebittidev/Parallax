@@ -1,7 +1,17 @@
 import { HeartIcon } from '@heroicons/react/24/outline';
+import { useEffect } from 'react';
+
+
 
 // components/Footer.tsx
 export default function Footer() {
+    useEffect(() => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.iubenda.com/iubenda.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }, []);
+    
     return (
         
       <footer className="px-5 py-5">
@@ -20,8 +30,8 @@ export default function Footer() {
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">Legal</h3>
                   <ul role="list" className="mt-4 space-y-4 text-sm text-gray-500">
-                    <li><a href="/privacypolicy">Privacy policy</a></li>
-                    <li><a href="/cookiepolicy">License</a></li>
+                    <li><a href="https://www.iubenda.com/privacy-policy/51029933" className="iubenda-white iubenda-noiframe iubenda-embed iubenda-noiframe " title="Privacy Policy ">Privacy Policy</a></li>
+                    <li><a href="https://www.iubenda.com/privacy-policy/51029933/cookie-policy" className="iubenda-white iubenda-noiframe iubenda-embed iubenda-noiframe " title="Cookie Policy ">Cookie Policy</a></li>
                   </ul>
                 </div>
               </div>
@@ -34,7 +44,7 @@ export default function Footer() {
             </p>
 
             <p className="text-sm text-gray-400 text-center">
-              Made with from <span className="text-indigo-600">♥</span> <a href="/" className="text-bold text-gray-600 underline">Simone Bitti</a>
+              Made with from <span className="text-indigo-600">♥</span> <a href="https://github.com/simonebittidev" className="text-bold text-gray-600 underline">Simone Bitti</a>
             </p>
           </div>
         </div>

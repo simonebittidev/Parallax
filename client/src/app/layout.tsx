@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Footer from "@/components/footer";
+import CookieWidget from "@/components/cookie-widget";
 
 export const metadata: Metadata = {
   title: "Parallax",
@@ -18,6 +19,7 @@ export default function RootLayout({
           <link rel="icon" href="favicon.ico" type="icon"/>
           <meta charSet="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <CookieWidget/>
       </head>
       <body className="min-h-screen">
         {children}
