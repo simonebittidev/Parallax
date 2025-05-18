@@ -18,7 +18,7 @@ export default function Navbar() {
   }, [])
 
   return (
-    <header className="absolute inset-x-0 top-0 z-50">
+    <header className="fixed top-0 left-0 w-full z-50 bg-white shadow">
       <nav aria-label="Global" className="flex items-center justify-between p-6 lg:px-8">
         <div className="flex lg:flex-1">
           <a href="/" className="-m-1.5 p-1.5">
@@ -33,7 +33,7 @@ export default function Navbar() {
             className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
           >
             <span className="sr-only">Open main menu</span>
-            <div className='w-8 h-8 flex items-center mt-1 justify-center rounded-full text-white font-bold text-sm bg-indigo-600'>
+            <div className='w-8 h-8 flex items-center justify-center rounded-full text-white font-bold text-sm bg-indigo-600'>
               <p className='h3'>{user.email ? user.email[0].toUpperCase() : 'P'}</p>
             </div>
             {/* <img
@@ -58,7 +58,7 @@ export default function Navbar() {
                     alt="User avatar"
                     className="size-8 rounded-full object-cover"
                   /> */}
-                  <div className='w-8 h-8 flex items-center mt-1 justify-center rounded-full text-white font-bold text-sm bg-indigo-600'>
+                  <div className='w-8 h-8 flex items-center justify-center rounded-full text-white font-bold text-sm bg-indigo-600'>
                     <p className='h3'>{user.email ? user.email[0].toUpperCase() : 'P'}</p>
                   </div>
                 </MenuButton>
