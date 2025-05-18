@@ -237,7 +237,7 @@ const ChatContent = () => {
   };
 
   return (
-      <div className="flex flex-col min-h-[100dvh] max-w-3xl mx-auto pt-8 overflow-hidden">
+      <div className="flex flex-col h-screen max-w-3xl mx-auto pt-20">
         <div className="flex-1 overflow-y-auto p-4" ref={chatBoxRef}>
           {chatMessages.map((msg, i) => (
             <div key={i} className={`mb-5 flex items-start gap-2 ${msg.role === 'human' ? 'justify-end' : 'justify-start'}`}>
@@ -274,7 +274,7 @@ const ChatContent = () => {
           ))}
         </div>
 
-        <div className="shrink-0 p-4 bg-white">
+        <div className="p-4 bg-white">
             {/* <a href="/" className="">
             <span aria-hidden="true" className='mr-1'>&larr;</span>
             Generate a new perspective
