@@ -1,17 +1,16 @@
 import base64
 import os
-import random
 from typing import Dict, List
 import uuid
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
-from llm_utils.agentv2 import AgentManager
+from langchain_google_firestore import FirestoreChatMessageHistory
+from llm_utils.graph_executor import GraphExecutor, ActiveAgent, PovAgentMessage
 from llm_utils.llm_pov import create_pov
 from pathlib import Path
-from llm_utils.llm_chat import ChatAgent, OppositeChatAgent, NeutralChatAgent, EmphaticChatAgent, AgentMessage
-import asyncio
+from llm_utils.llm_chat import ChatAgent
 import firebase_admin
 from firebase_admin import firestore, credentials
 import json
@@ -33,8 +32,6 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-MAX_AGENT_CHAIN = 4
-
 # Serve React app (build)
 client_path = Path("client/out")
 app.mount("/static", StaticFiles(directory=client_path), name="static")
@@ -42,71 +39,24 @@ app.mount("/static", StaticFiles(directory=client_path), name="static")
 connected_clients: Dict[str, List[WebSocket]] = {}
 active_agents_by_conversation: Dict[str, List[ChatAgent]] = {}
 
-async def broadcast(chat_history, conversation_id: str):
-      print(f"Broadcasting to clients for conversation {conversation_id}")
-      if conversation_id in connected_clients:
-        for client in connected_clients[conversation_id]:
-            print(f"Broadcasting to client {conversation_id}")
-            chat_history_json = serialize_chat_history_to_json(chat_history)
-            await client.send_json(chat_history_json)
-
-async def broadcast_typing_event(agent_name: str, conversation_id: str):
-    print(f"Broadcasting typing event to clients for conversation {conversation_id}")
-    print(f"Connected clients: {connected_clients}")
-    if conversation_id in connected_clients:
-        for client in connected_clients[conversation_id]:
-            print(f"Broadcasting typing event to client {conversation_id}")
-            await client.send_json({"event": "typing", "agent_name": agent_name})
-
-async def agent_loop(agent: ChatAgent, user_id):
-    conversation_id = agent.conv_id
-    last_seen = 0
-
-    while True:
-        if not connected_clients.get(conversation_id):
-            print(f"No clients for conversation {conversation_id}, stopping agent {agent.agent_name}")
-            break
-
-        chat_history = await load_chat_history(db, user_id, conversation_id)
-        print(f"Chat history: {chat_history}")
-
-        last_msgs_contains_user = False
-        if len(chat_history) >= 4:
-            for msg in chat_history[-4:]:
-                print(f"Message: {msg}")
-                if msg["role"] == "user":
-                    last_msgs_contains_user = True
-
-            if last_msgs_contains_user == False:
-                print(f"User not found in last messages, skipping agent {agent.agent_name}")
-                await asyncio.sleep(2)
-                continue
-
-        last_message = chat_history[-1:][0]
-        if last_message and last_message["agent_name"] == agent.agent_name:
-            print(f"Last message from agent {agent.agent_name}, skipping agent")
-            await asyncio.sleep(2)
-            continue
-
-        print(f"Agent {agent.agent_name} is running")
-
-        print(f"Chat history: {chat_history}")
-        print(f"Last seen: {last_seen}")
-        if len(chat_history) > last_seen:
-            last_seen = len(chat_history)
-
-            await broadcast_typing_event(agent.agent_name, conversation_id=conversation_id)
-            await asyncio.sleep(random.uniform(1, 6))
-
-            response = agent.generate_chat_answer(chat_history)
-            if response:
-                await save_message(db, user_id, conversation_id, response)
-                print(f"Agent {agent.agent_name} response: {response}")
-                chat_history = await load_chat_history(db, user_id, conversation_id)
-                await broadcast(chat_history=chat_history, conversation_id=conversation_id)
+def serialize_messages(messages):
+    parsed_messages = []
+    for msg in messages:
+        if isinstance(msg, HumanMessage):
+            parsed_messages.append({
+                "role": msg.type,
+                "content": msg.content,
+                "agent_name":  ""
+            })
         else:
-            await asyncio.sleep(2)
-            
+            parsed_messages.append({
+                "role": msg.type,
+                "content": msg.content,
+                "agent_name": msg.agent_name
+            })
+    
+    return json.dumps(parsed_messages)
+
 @app.websocket("/ws/{user_id}/{conversation_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id: str):
     await websocket.accept()
@@ -115,24 +65,19 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id
         if conversation_id not in connected_clients:
             connected_clients[conversation_id] = []
             connected_clients[conversation_id].append(websocket)
-            # connected_clients.append(websocket)
 
         print(f"WebSocket connection established for user {user_id} and conversation {conversation_id}")
 
-        chat_history = await load_chat_history(db, user_id, conversation_id)
-
-        await websocket.send_json(serialize_chat_history_to_json(chat_history))
         while True:
             print(f"WebSocket received message for user {user_id} and conversation {conversation_id}")
 
             data = await websocket.receive_json()
-            message = HumanMessage(content=data["text"])
+            message=data["text"]
             print(f"Received message: {message}")
-            await save_message(db, user_id, conversation_id, message)
 
-            print(f"chathistory: {chat_history}")
-            chat_history = await load_chat_history(db, user_id, conversation_id)
-            await broadcast(chat_history=chat_history, conversation_id=conversation_id)
+            graph_executor = GraphExecutor(conversation_id=conversation_id, db_client=db, active_agents=active_agents_by_conversation[conversation_id])
+            await graph_executor.trigger_agents(connected_clients=connected_clients[conversation_id], msg=message)
+
     except WebSocketDisconnect:
         print(f"WebSocket disconnesso per user {user_id}, conv {conversation_id}")
         if conversation_id in connected_clients and websocket in connected_clients[conversation_id]:
@@ -141,11 +86,9 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id
 @app.get("/messages/{user_id}/{conversation_id}")
 async def get_messages(user_id: str, conversation_id: str):
     print(f"Fetching messages for user {user_id} and conversation {conversation_id}")
-    chat_history = await load_chat_history(db, user_id, conversation_id)
-
-    chat_history_json = serialize_chat_history_to_json(chat_history)
-
-    return JSONResponse(content=chat_history_json)
+    chat_history = GraphExecutor.get_chat_history(conversation_id, db)
+    messages = serialize_messages(chat_history.messages)
+    return JSONResponse(content=messages)
 
 @app.post("/api/processpov")
 async def process_pov(request: Request):
@@ -155,45 +98,36 @@ async def process_pov(request: Request):
     conv_id = data.get("convId")
     user_id = data.get("userId")
 
+    reload_graph = True
+    chat_history = None
+
     if not conv_id:
         print("No conversation ID provided, creating a new one.")
         conv_id =str(uuid.uuid4())
-
-        await save_message(db, user_id=user_id, conversation_id=conv_id,message=HumanMessage(content=user_text))
+        chat_history = GraphExecutor.get_chat_history(conv_id, db)
+        chat_history.add_user_message(HumanMessage(content=user_text))
+        reload_graph = False
+    else:
+        chat_history = GraphExecutor.get_chat_history(conv_id, db)
 
     rewritten_text = create_pov(perspective, user_text)
 
     print(f"Perspective: {perspective}")
 
-    if perspective == "Opposite" or perspective == "Opposto":
-        agent = OppositeChatAgent(conv_id, rewritten_text)
-        print(f"Agent: {agent.conv_id}")
+    agent = ActiveAgent(name = perspective, pov = rewritten_text)
 
-        start_agent(agent, user_id)
-    elif perspective == "Neutral" or perspective == "Neutrale":
-        agent = NeutralChatAgent(conv_id, rewritten_text)
-        start_agent(agent, user_id)
-    elif perspective == "Emphatic" or perspective == "Empatico":
-        agent = EmphaticChatAgent(conv_id, rewritten_text)
-        start_agent(agent, user_id)
+    if conv_id not in active_agents_by_conversation:
+        active_agents_by_conversation[conv_id] = []
 
-    #set msg
-    await save_message(db, user_id=user_id, conversation_id=conv_id, message= AgentMessage(agent_name=perspective, content=rewritten_text))
+    active_agents_by_conversation[conv_id].append(agent)
+
+    chat_history.add_message(PovAgentMessage(agent_name=perspective, content=rewritten_text))
+    if reload_graph:
+        # Force a reload of the graph
+        graph_executor = GraphExecutor(conversation_id=conv_id, db_client=db, active_agents=active_agents_by_conversation[conv_id])
+        await graph_executor.trigger_agents(connected_clients=connected_clients[conv_id], msg="")
 
     return {"conv_id": conv_id, "pov": rewritten_text}
-
-def start_agent(agent: ChatAgent, user_id):
-    conversation_id = agent.conv_id
-
-    if conversation_id not in active_agents_by_conversation:
-        active_agents_by_conversation[conversation_id] = []
-
-    # Evita duplicati
-    if any(type(existing_agent) == type(agent) for existing_agent in active_agents_by_conversation[conversation_id]):
-        return
-
-    active_agents_by_conversation[conversation_id].append(agent)
-    asyncio.create_task(agent_loop(agent, user_id))
 
 @app.get("/{full_path:path}")
 async def serve_frontend(full_path: str):

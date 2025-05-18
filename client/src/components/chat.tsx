@@ -35,8 +35,8 @@ const TypewriterText = ({ text }: { text: string }) => {
 };
 
 type ChatMessage = {
-  role: 'user' | 'ai';
-  agent_name: 'Opposite' | 'Neutral' | 'Emphatic';
+  role: 'human' | 'ai';
+  agent_name: 'Opposite' | 'Neutral' | 'Emphatic' | "";
   content: string;
 };
 
@@ -211,6 +211,7 @@ const ChatContent = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({ text: contentToSend, target_agent: agent }));
       setChatInput("");
+      setChatMessages([...chatMessages, { role: 'human', agent_name: '', content: contentToSend }]);
     }
   };
 
@@ -239,8 +240,8 @@ const ChatContent = () => {
       <div className="flex flex-col h-screen max-w-3xl mx-auto pt-15">
         <div className="flex-1 overflow-y-auto p-4" ref={chatBoxRef}>
           {chatMessages.map((msg, i) => (
-            <div key={i} className={`mb-5 flex items-start gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {msg.role !== 'user' && (
+            <div key={i} className={`mb-5 flex items-start gap-2 ${msg.role === 'human' ? 'justify-end' : 'justify-start'}`}>
+              {msg.role !== 'human' && (
                 <div
                   className={clsx(
                     'w-8 h-8 flex items-center mt-1 justify-center rounded-full text-white font-bold text-sm',
@@ -255,7 +256,7 @@ const ChatContent = () => {
                 </div>
               )}
               <div
-                className={`rounded-xl px-5 py-3 text-sm max-w-[80%] whitespace-pre-line ${msg.role === 'user' ? 'bg-black text-white' : 'bg-gray-100 text-black'}`}
+                className={`rounded-xl px-5 py-3 text-sm max-w-[80%] whitespace-pre-line ${msg.role === 'human' ? 'bg-black text-white' : 'bg-gray-100 text-black'}`}
               >
                 {/* {msg.role === 'user' ? msg.content : <TypewriterText text={msg.content} />} */}
                 {msg.content}

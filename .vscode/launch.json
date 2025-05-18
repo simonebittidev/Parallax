@@ -1,22 +1,21 @@
 {
     "version": "0.2.0",
     "configurations": [
-        {
-        "name": "Flask App",
+      {
+        "name": "Debug FastAPI (uvicorn)",
         "type": "python",
         "request": "launch",
-        "module": "flask",
-        "env": {
-            "FLASK_APP": "app.py",           // cambia se il tuo file principale ha un altro nome
-            "FLASK_ENV": "development"
-        },
+        "module": "uvicorn",
         "args": [
-            "run",
-            "--no-debugger",                // VSCode gestisce il debugger
-            "--no-reload"                   // Disattiva il reload automatico per evitare doppie istanze
+          "app:app",
+          "--reload",
+          "--host", "0.0.0.0",
+          "--port", "5005",
+          "--log-level", "debug"
         ],
-        "jinja": true
-        }
+        "jinja": true,
+        "justMyCode": false
+      }
     ]
-}
+  }
   

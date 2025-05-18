@@ -11,3 +11,4 @@ uvicorn[standard]
 python-dotenv
 firebase_admin
 gunicorn
+langchain-google-firestore

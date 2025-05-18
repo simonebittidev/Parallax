@@ -33,11 +33,14 @@ export default function Navbar() {
             className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
           >
             <span className="sr-only">Open main menu</span>
-            <img
+            <div className='w-8 h-8 flex items-center mt-1 justify-center rounded-full text-white font-bold text-sm bg-indigo-600'>
+              <p className='h3'>{user.email ? user.email[0].toUpperCase() : 'P'}</p>
+            </div>
+            {/* <img
                     src={user.photoURL || '/default-avatar.png'}
                     alt="User avatar"
                     className="size-8 rounded-full object-cover"
-                  />
+                  /> */}
             {/* <Bars3Icon aria-hidden="true" className="size-6" /> */}
           </button>
         ) : (<a href="/login" className="text-sm font-semibold text-gray-900">
@@ -48,13 +51,16 @@ export default function Navbar() {
           {user ? (
             <Menu as="div" className="relative ml-3">
               <div>
-                <MenuButton className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none">
+                <MenuButton className="relative flex rounded-full text-sm focus:outline-none">
                   <span className="sr-only">Open user menu</span>
-                  <img
+                  {/* <img
                     src={user.photoURL || '/default-avatar.png'}
                     alt="User avatar"
                     className="size-8 rounded-full object-cover"
-                  />
+                  /> */}
+                  <div className='w-8 h-8 flex items-center mt-1 justify-center rounded-full text-white font-bold text-sm bg-indigo-600'>
+                    <p className='h3'>{user.email ? user.email[0].toUpperCase() : 'P'}</p>
+                  </div>
                 </MenuButton>
               </div>
               <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">

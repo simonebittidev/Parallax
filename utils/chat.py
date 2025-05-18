@@ -8,14 +8,14 @@ from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 async def save_message(db, user_id: str, conversation_id: str, message: BaseMessage):
     if isinstance(message, HumanMessage):
         message = {
-            "role": "user",
+            "role": "human",
             "content": message.content,
             "agent_name": None,
             "timestamp": datetime.datetime.utcnow()
         }
     else:
         message = {
-            "role": "assistant",
+            "role": "ai",
             "content": message.content,
             "agent_name": message.agent_name,
             "timestamp": datetime.datetime.utcnow()
