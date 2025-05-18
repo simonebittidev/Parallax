@@ -48,6 +48,8 @@ export default function Home() {
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false)
   const [openError, setOpenError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
+
 
 
   const handlePerspectiveClick = (perspective: 'Opposite' | 'Neutral' | 'Emphatic') => {
@@ -88,20 +90,21 @@ export default function Home() {
         }),
       });
 
+      const data = await response.json(); // LEGGI UNA VOLTA
       if (!response.ok) {
-        throw new Error('Errore nella risposta del server');
+        throw new Error(data.detail || "Unknown error occurred.");
       }
 
-      const data = await response.json();
       setRewrittenText(data.pov);
       setConvId(data.conv_id);
 
       setLoading(false);
       setShowResponse(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Errore durante la chiamata al server:', error);
       setLoading(false);
       setOpenError(true);
+      setErrorMessage(error.message);
     }
   };
 
@@ -153,7 +156,7 @@ export default function Home() {
       <Navbar></Navbar>
       <LoginAlert open={open} setOpen={setOpen}/>
       <div className="relative isolate pt-20 px-5">
-        <ErrorAlert open={openError} setOpen={setOpenError}/>
+        <ErrorAlert open={openError} setOpen={setOpenError} errorMessage={errorMessage}/>
         <div className="mx-auto max-w-2xl py-15">
           {/* <h1 className="text-4xl font-bold tracking-tight text-indigo-600">Parallax</h1> */}
             <p className="mt-2 text-lg text-neutral-600 font-bold">Reflect. Rephrase. Understand.</p>

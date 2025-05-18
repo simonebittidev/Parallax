@@ -2,7 +2,7 @@ import base64
 import os
 from typing import Dict, List
 import uuid
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
@@ -111,6 +111,9 @@ async def process_pov(request: Request):
         chat_history = GraphExecutor.get_chat_history(conv_id, db)
 
     rewritten_text = create_pov(perspective, user_text)
+
+    if not rewritten_text:
+        raise HTTPException(status_code=500, detail="Sorry, we couldn't generate the point of view at this time. Try rephrasing your input or please try again shortly.")
 
     print(f"Perspective: {perspective}")
 

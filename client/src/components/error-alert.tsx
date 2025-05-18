@@ -7,15 +7,19 @@ import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 type ErrorAlertProps = {
     open: boolean
     setOpen: (value: boolean) => void
+    errorMessage: string
   }
 
-export default function ErrorAlert({open, setOpen }: ErrorAlertProps) {
+export default function ErrorAlert({open, setOpen, errorMessage }: ErrorAlertProps) {
     return (
         <>
         { open ? (
             <div className='rounded-xl bg-red-300 px-5 py-5 flex'>
                 <ExclamationTriangleIcon aria-hidden="true" className="size-6 mr-2 text-red-900" /> 
-                <p className='text-red-900'>An error occured. Please try again later.</p>
+                
+                <p className='text-red-900'>{errorMessage.trim() !== ""
+                    ? errorMessage
+                    : "An error occurred. Please try again later."}</p>
             </div>
         ) : (<div></div>)
         }
