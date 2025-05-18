@@ -13,10 +13,30 @@ import ErrorAlert from '@/components/error-alert';
 
 
 export default function Home() {
+  const examplePlaceholders = [
+    "Write here your opinion...",
+    "I believe working from home makes people less productive.",
+    "Lately, I feel neglected by my partner...",
+    "In my opinion, young people today don't really want to work.",
+    "I think the school system doesn't prepare students for real life.",
+    "I'm trying to take care of my mental health...",
+    "No one in my team takes responsibility...",
+    "My friends don't invite me like they used to..."
+  ];
+  
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prevIndex) => (prevIndex + 1) % examplePlaceholders.length);
+    }, 4000); // Cambia ogni 4 secondi
+  
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
       if (user) {
@@ -50,8 +70,6 @@ export default function Home() {
   const [openError, setOpenError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
 
-
-
   const handlePerspectiveClick = (perspective: 'Opposite' | 'Neutral' | 'Emphatic') => {
     setSelectedPerspective(perspective);
   };
@@ -71,7 +89,7 @@ export default function Home() {
     }
 
     if (!inputText || !selectedPerspective) {
-      alert('Per favore, inserisci un testo e seleziona una prospettiva.');
+      alert('Please enter some text and select a perspective');
       return;
     }
 
@@ -101,7 +119,7 @@ export default function Home() {
       setLoading(false);
       setShowResponse(true);
     } catch (error: any) {
-      console.error('Errore durante la chiamata al server:', error);
+      console.error('Error:', error);
       setLoading(false);
       setOpenError(true);
       setErrorMessage(error.message);
@@ -198,7 +216,7 @@ export default function Home() {
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               rows={4}
-              placeholder="Write here your opinion..."
+              placeholder={examplePlaceholders[placeholderIndex]}
               onKeyDown={(e) => { if (e.key === 'Enter'){e.preventDefault(); handleSubmit();}}}
               className="w-full pr-14 pl-4 py-3 border border-gray-200 bg-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-600"
             />
