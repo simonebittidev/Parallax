@@ -3,19 +3,21 @@
 import { useState, FormEvent } from "react";
 import Head from "next/head";
 import { signupWithEmailAndPassword, loginWithGoogle} from "../../lib/firebase";
+import { useRouter } from 'next/navigation';
 
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-
+  const router = useRouter();
+  
   const handleSignUp = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     try {
       await signupWithEmailAndPassword(email, password);
-      // qui puoi fare redirect o altre azioni dopo la registrazione
+      router.push('/home');
     } catch (err: any) {
       setError(err.message);
     }
@@ -25,7 +27,6 @@ export default function SignUpPage() {
     setError(null);
     try {
       await loginWithGoogle();
-      // qui puoi fare redirect o altre azioni dopo il login Google
     } catch (err: any) {
       setError(err.message);
     }

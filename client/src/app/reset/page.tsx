@@ -17,7 +17,7 @@ export default function ResetPage() {
     try {
       await resetEmail(email);
       setMessage(
-        "Controlla la tua casella: ti abbiamo inviato un link per resettare la password."
+        "Check your inbox: we have sent you a link to reset your password."
       );
     } catch (err: any) {
       setError(err.message);
@@ -79,7 +79,7 @@ export default function ResetPage() {
             </button>
           </form>
         </div>
-        </div>
+      </div>
     </>
   );
 }

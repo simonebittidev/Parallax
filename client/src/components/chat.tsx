@@ -246,7 +246,8 @@ const MOBILE_WIDTH = 768;
     typeof window !== "undefined" && window.innerWidth < MOBILE_WIDTH;
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen items-center justify-center">
+      <div className="flex flex-col h-full w-full max-w-xl mx-auto">
       <div className="h-16 w-full mt-20">
         <div className="flex-1 overflow-y-auto p-4" ref={chatBoxRef} style={{
           paddingBottom: isInputFocused && isMobile ? "270px" : "150px",
@@ -289,7 +290,8 @@ const MOBILE_WIDTH = 768;
 
         
       </div>
-      <div className="p-4 bg-white fixed bottom-0 left-0 rigth-0 z-20 w-full">
+      <div className="p-4 bg-white fixed bottom-0 left-0 right-0 z-20 w-full flex justify-center">
+        <div className="w-full max-w-xl">
       {['Opposite', 'Neutral', 'Emphatic']
         .filter(p => !chatMessages.some(msg => msg.agent_name === p) && !activePerspectives.includes(p))
         .map(p => (
@@ -360,8 +362,9 @@ const MOBILE_WIDTH = 768;
         </svg>
       </button>
     </div>
-    
-      </div>
+    </div>
+    </div>
+    </div>
     </div>
   );
 };
