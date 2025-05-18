@@ -237,7 +237,7 @@ const ChatContent = () => {
   };
 
   return (
-      <div className="flex flex-col h-screen max-w-3xl mx-auto pt-20">
+      <div className="flex flex-col h-screen max-w-3xl pt-20">
         <div className="flex-1 overflow-y-auto p-4" ref={chatBoxRef}>
           {chatMessages.map((msg, i) => (
             <div key={i} className={`mb-5 flex items-start gap-2 ${msg.role === 'human' ? 'justify-end' : 'justify-start'}`}>
