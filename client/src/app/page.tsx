@@ -13,6 +13,7 @@ import ErrorAlert from '@/components/error-alert';
 
 
 export default function Home() {
+
   const examplePlaceholders = [
     "Write here your opinion...",
     "I believe working from home makes people less productive.",
@@ -28,6 +29,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   
   useEffect(() => {
     const interval = setInterval(() => {

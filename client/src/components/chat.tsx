@@ -43,6 +43,7 @@ type ChatMessage = {
 const ChatContent = () => {
   const params = useSearchParams();
   const chatBoxRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const perspective = params.get('perspective') as ChatMessage['agent_name'] | null;
   const conv_id = params.get('conv_id') as string || null;
   const [activePerspectives, setActivePerspectives] = useState<string[]>([]);
@@ -236,9 +237,21 @@ const ChatContent = () => {
       await getMessages();
   };
 
+
+const MOBILE_WIDTH = 768;
+
+  const [isInputFocused, setInputFocused] = useState(false);
+  // Per evitare errori SSR/Next.js: controlliamo che sia client-side
+  const isMobile =
+    typeof window !== "undefined" && window.innerWidth < MOBILE_WIDTH;
+
   return (
-      <div className="flex flex-col h-screen max-w-3xl pt-20">
-        <div className="flex-1 overflow-y-auto p-4" ref={chatBoxRef}>
+    <div className="flex flex-col h-screen">
+      <div className="h-16 w-full mt-20">
+        <div className="flex-1 overflow-y-auto p-4" ref={chatBoxRef} style={{
+          paddingBottom: isInputFocused && isMobile ? "270px" : "150px",
+          transition: "padding-bottom 0.2s",
+        }}>
           {chatMessages.map((msg, i) => (
             <div key={i} className={`mb-5 flex items-start gap-2 ${msg.role === 'human' ? 'justify-end' : 'justify-start'}`}>
               {msg.role !== 'human' && (
@@ -274,73 +287,82 @@ const ChatContent = () => {
           ))}
         </div>
 
-        <div className="p-4 bg-white">
-            {/* <a href="/" className="">
-            <span aria-hidden="true" className='mr-1'>&larr;</span>
-            Generate a new perspective
-            </a> */}
-             <div>
-            {['Opposite', 'Neutral', 'Emphatic']
-              .filter(p => !chatMessages.some(msg => msg.agent_name === p) && !activePerspectives.includes(p))
-              .map(p => (
-                <button
-                  key={p}
-                  onKeyDown={(e) => e.key === 'Enter' && handle_new_pov(p)}
-                  onClick={() => {
-                    setActivePerspectives(prev => [...prev, p]); // nasconde subito il pulsante
-                    handle_new_pov(p);
-                  }}
-                  className="mt-2 inline-flex items-center px-6 py-2 bg-gray-100 rounded-full border border-gray-300 hover:bg-gray-200 transition mr-2"
-                >
-                  <PlusIcon className="size-5 mr-2" /> {p}
-                </button>
-            ))}
-          </div>
-          <div tabIndex={0} className="mt-2 flex gap-2 border p-2 rounded-2xl border-gray-300 bg-gray-100 h-20 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:outline-none">
-            <textarea
-              value={chatInput}
-              onChange={(e) => {
-                const value = e.target.value;
-                setChatInput(value);
-                if (value.endsWith('@')) {
-                  setFilteredSuggestions(['Opposite', 'Neutral', 'Emphatic']);
-                  setSuggestionsVisible(true);
-                } else {
-                  setSuggestionsVisible(false);
-                }
-              }}
-              placeholder="Write your message..."
-              onKeyDown={(e) => { if (e.key === 'Enter'){e.preventDefault(); handleSend();}}}
-              className="flex-1 hover:bg-gray-100 focus:outline-none"
-            />
-            {suggestionsVisible && (
-              <div className="absolute mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 p-2">
-                {filteredSuggestions.map((s) => (
-                  <div
-                    key={s}
-                    className="cursor-pointer px-2 py-1 hover:bg-indigo-100"
-                    onClick={() => {
-                      setChatInput(chatInput + s + ' ');
-                      setSuggestionsVisible(false);
-                    }}
-                  >
-                    @{s}
-                  </div>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={handleSend}
-              className="bottom-3 right-3 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-600-dark"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </button>
-          </div>
-         
-        </div>
+        
       </div>
+      <div className="p-4 bg-white fixed bottom-0 left-0 rigth-0 z-20 w-full">
+      {['Opposite', 'Neutral', 'Emphatic']
+        .filter(p => !chatMessages.some(msg => msg.agent_name === p) && !activePerspectives.includes(p))
+        .map(p => (
+          <button
+            key={p}
+            onKeyDown={(e) => e.key === 'Enter' && handle_new_pov(p)}
+            onClick={() => {
+              setActivePerspectives(prev => [...prev, p]); // nasconde subito il pulsante
+              handle_new_pov(p);
+            }}
+            className="mt-2 inline-flex items-center px-6 py-2 bg-gray-100 rounded-full border border-gray-300 hover:bg-gray-200 transition mr-2"
+          >
+            <PlusIcon className="size-5 mr-2" /> {p}
+          </button>
+      ))}
+    
+
+    <div tabIndex={0}  className=" mt-2 flex gap-2 border p-2 rounded-2xl border-gray-300 bg-gray-100 h-20 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:outline-none">
+      <textarea
+        ref={inputRef}
+        value={chatInput}
+        onChange={(e) => {
+          const value = e.target.value;
+          setChatInput(value);
+          if (value.endsWith('@')) {
+            setFilteredSuggestions(['Opposite', 'Neutral', 'Emphatic']);
+            setSuggestionsVisible(true);
+          } else {
+            setSuggestionsVisible(false);
+          }
+        }}
+        placeholder="Write your message..."
+        onKeyDown={(e) => { if (e.key === 'Enter'){e.preventDefault(); handleSend();}}}
+        className="flex-1 hover:bg-gray-100 focus:outline-none"
+        onFocus={() => {
+          setInputFocused(true);
+          inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }}
+        onBlur={() => {
+          setInputFocused(false);
+          setTimeout(() => {
+            inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 100);
+        }}
+      />
+      {suggestionsVisible && (
+        <div className="absolute mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 p-2">
+          {filteredSuggestions.map((s) => (
+            <div
+              key={s}
+              className="cursor-pointer px-2 py-1 hover:bg-indigo-100"
+              onClick={() => {
+                setChatInput(chatInput + s + ' ');
+                setSuggestionsVisible(false);
+              }}
+            >
+              @{s}
+            </div>
+          ))}
+        </div>
+      )}
+      <button
+        onClick={handleSend}
+        className="bottom-3 right-3 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-600-dark"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      </button>
+    </div>
+    
+      </div>
+    </div>
   );
 };
 
