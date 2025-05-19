@@ -82,10 +82,17 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, conversation_id
         print(f"WebSocket disconnesso per user {user_id}, conv {conversation_id}")
         if conversation_id in connected_clients and websocket in connected_clients[conversation_id]:
             connected_clients[conversation_id].remove(websocket)
+            active_agents_by_conversation.pop(conversation_id, "")
+            chat_history = GraphExecutor.get_chat_history(conversation_id, db)
+            chat_history.clear()
 
 @app.get("/messages/{user_id}/{conversation_id}")
 async def get_messages(user_id: str, conversation_id: str):
     print(f"Fetching messages for user {user_id} and conversation {conversation_id}")
+
+    if conversation_id not in active_agents_by_conversation:
+        raise HTTPException(status_code=500, detail="The selected conversation no longer exists.")
+
     chat_history = GraphExecutor.get_chat_history(conversation_id, db)
     messages = serialize_messages(chat_history.messages)
     return JSONResponse(content=messages)

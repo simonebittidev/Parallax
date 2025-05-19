@@ -17,12 +17,8 @@ export default function Home() {
   const examplePlaceholders = [
     "Write here your opinion...",
     "I believe working from home makes people less productive.",
-    "Lately, I feel neglected by my partner...",
     "In my opinion, young people today don't really want to work.",
     "I think the school system doesn't prepare students for real life.",
-    "I'm trying to take care of my mental health...",
-    "No one in my team takes responsibility...",
-    "My friends don't invite me like they used to..."
   ];
   
   const [userId, setUserId] = useState<string | null>(null);
@@ -177,13 +173,15 @@ export default function Home() {
       <LoginAlert open={open} setOpen={setOpen}/>
       <div className="relative isolate pt-20 px-5">
         <ErrorAlert open={openError} setOpen={setOpenError} errorMessage={errorMessage}/>
-        <div className="mx-auto max-w-2xl py-15">
+        <div className="mx-auto max-w-2xl py-10">
           {/* <h1 className="text-4xl font-bold tracking-tight text-indigo-600">Parallax</h1> */}
             <p className="mt-2 text-lg text-neutral-600 font-bold">Reflect. Rephrase. Understand.</p>
             <p id="headerDescription" className="mt-4 text-base text-neutral-500">
-            Parallax is an app for reflection and dialogue. Enter a thought, an opinion, or a short text,
-            and Parallax will rewrite it from three different perspectives — opposing, neutral, and empathetic. It helps to explore nuances,
-            gain clarity, and prepare for complex discussions.
+            Parallax is an app for reflection and dialogue. Start by entering a thought, an opinion, or a short text, and choose the perspective you want to explore — opposing, neutral, or empathetic. Parallax will rewrite your input from that point of view and open a dedicated chat, where you can interact directly with an AI embodying the selected perspective.
+            <br />
+            At any time, you can invite other perspectives into the conversation, allowing multiple viewpoints to join the discussion and deepen your understanding.
+            <br />
+            Explore nuance, gain clarity, and get ready for complex conversations — all in one place.
             </p>
         </div>
       </div>
@@ -191,7 +189,7 @@ export default function Home() {
       <div className="mx-auto max-w-2xl py-5">
       {!inChat && (
         <section id="mainSection">
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center mt-2">
             <div className="inline-flex bg-gray-100 rounded-full p-1 gap-1 backdrop-blur-sm">
               {(['Opposite', 'Neutral', 'Emphatic'] as const).map(p => (
                 <button

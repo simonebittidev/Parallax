@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { logOut, auth } from '../lib/firebase'
 import { PlusIcon } from '@heroicons/react/24/solid';
+import { useRouter } from 'next/navigation';
 
 const TypewriterText = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -55,6 +56,7 @@ const ChatContent = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState<string[]>([]);
 
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
@@ -90,7 +92,7 @@ const ChatContent = () => {
       });
   
       if (!response.ok) {
-        throw new Error('Errore nella risposta del server');
+        router.push("/home");
       }
   
       const messages = JSON.parse(await response.json());
@@ -103,7 +105,7 @@ const ChatContent = () => {
 
     } catch (error) {
       console.error('Errore durante la chiamata al server:', error);
-      alert('Si è verificato un errore durante la comunicazione con il server.');
+      // alert('Si è verificato un errore durante la comunicazione con il server.');
     }
   };
 
