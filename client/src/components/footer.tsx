@@ -44,7 +44,7 @@ export default function Footer() {
             </p>
 
             <p className="text-sm text-gray-400 text-center">
-              Made with from <span className="text-indigo-600">♥</span> <a href="https://github.com/simonebittidev" className="text-bold text-gray-600 underline">Simone Bitti</a>
+              Made with <span className="text-indigo-600">♥</span> from <a href="https://github.com/simonebittidev" className="text-bold text-gray-600 underline">Simone Bitti</a>
             </p>
           </div>
         </div>

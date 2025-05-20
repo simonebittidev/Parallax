@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import os
 from typing import Dict, List
@@ -135,8 +136,14 @@ async def process_pov(request: Request):
     if reload_graph:
         # Force a reload of the graph
         graph_executor = GraphExecutor(conversation_id=conv_id, db_client=db, active_agents=active_agents_by_conversation[conv_id])
-        await graph_executor.trigger_agents(connected_clients=connected_clients[conv_id], msg="")
-
+        
+        asyncio.create_task(
+            graph_executor.trigger_agents(
+                connected_clients=connected_clients[conv_id],
+                msg=""
+            )
+        )
+        
     return {"conv_id": conv_id, "pov": rewritten_text}
 
 @app.get("/{full_path:path}")

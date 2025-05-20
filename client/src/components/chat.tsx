@@ -219,6 +219,7 @@ const ChatContent = () => {
   };
 
   const handle_new_pov = async (perspective:string) =>  {
+
       const response = await fetch('/api/processpov', {
         method: 'POST',
         headers: {
@@ -236,7 +237,8 @@ const ChatContent = () => {
         throw new Error('Errore nella risposta del server');
       }
 
-      await getMessages();
+      const data = await response.json();
+      setChatMessages(prevMessages => [...prevMessages, { role: 'ai', agent_name: perspective as ChatMessage['agent_name'], content: data.pov }]);
   };
 
 

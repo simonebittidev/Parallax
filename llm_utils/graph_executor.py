@@ -50,8 +50,11 @@ default_prompt = """Sei un assistente virtuale specializzato nella discussione e
     - Sostieni sempre il tuo punto di vista, anche se non sei d'accordo con gli altri assistenti virtuali o con l'utente.
     - Non generare mai una risposta se l'ultimo messaggio in chat è stato inviato da te.
     - Non è obbligatorio che tu risponda sempre, puoi anche decidere di non rispondere se pensi di non avere nulla da aggiungere alla discussione a meno che nell'ultimo messaggio della conversazione non si faccio riferimento esplicito al tuo nome.
+    - Rispondi usando la stessa lingua utilizzata nei messaggi precedenti.
 
     Cerca di simulare quello che farebbe una persona reale in una discussione, quindi puoi anche esprimere dubbi o incertezze, ma cerca di essere sempre coerente con il tuo punto di vista.
+
+    Rispondi con la stessa lingua utilizzata dall'utente nei messaggi precedenti.
     """
 
 class GraphExecutor:
@@ -78,7 +81,7 @@ class GraphExecutor:
                 messages = self.serialize_messages(state["messages"])
                 prompt = ChatPromptTemplate.from_messages([
                     SystemMessage(content=default_prompt),
-                    SystemMessage(content=f"Il tuo nome è:{agent_name}\nEcco il punto di vista che devi sostenere: {pov}\nEcco la history dei messaggi della chat:{messages}")
+                    SystemMessage(content=f"""Il tuo nome è:{agent_name}\nEcco il punto di vista che devi sostenere: {pov}\nEcco la history dei messaggi della chat:{messages}""")
                 ])
 
                 llm = AzureChatOpenAI(
